@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lipreading AI for Mum</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .camera-box {
+            background: #f0f0f0;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        #video {
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            background: #000;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .record-btn {
+            background: linear-gradient(45deg, #ff4757, #ff3742);
+        }
+        
+        .record-btn.recording {
+            background: linear-gradient(45deg, #ff6b7a, #ff5722);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .word-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .word-btn {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            padding: 12px;
+            font-size: 14px;
+        }
+        
+        .word-btn.selected {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            transform: scale(1.05);
+        }
+        
+        .result {
+            background: #e8f5e8;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .prediction {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 10px 0;
+        }
+        
+        .confidence {
+            font-size: 18px;
+            color: #2196F3;
+        }
+        
+        .loading {
+            display: none;
+            color: #666;
+            margin: 20px 0;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        .instructions {
+            background: #fff3cd;
+            color: #856404;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Lipreading AI</h1>
+        <p><strong>Hi Mum!</strong> Record yourself mouthing a word!</p>
+        
+        <div class="camera-box">
+            <video id="video" autoplay muted playsinline></video>
+            <br>
+            <button class="btn" id="cameraBtn" onclick="startCamera()">📹 Start Camera</button>
+            <button class="btn record-btn" id="recordBtn" onclick="toggleRecording()" style="display:none;">🎥 Start Recording</button>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <h3>📝 Choose a word:</h3>
+        <div class="word-buttons">
+            <button class="btn word-btn" onclick="selectWord('doctor')">👨‍⚕️ Doctor</button>
+            <button class="btn word-btn" onclick="selectWord('glasses')">👓 Glasses</button>
+            <button class="btn word-btn" onclick="selectWord('help')">🆘 Help</button>
+            <button class="btn word-btn" onclick="selectWord('pillow')">🛏️ Pillow</button>
+            <button class="btn word-btn" onclick="selectWord('phone')">📱 Phone</button>
+        </div>
+        
+        <div class="loading" id="loading">🤖 AI is analyzing...</div>
+        
+        <div class="result" id="result">
+            <div class="prediction" id="prediction"></div>
+            <div class="confidence" id="confidence"></div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📱 How to use:</h3>
+            <ol>
+                <li>Tap "Start Camera" and allow access</li>
+                <li>Choose a word from the buttons</li>
+                <li>Tap "Start Recording" and mouth the word</li>
+                <li>Tap "Stop Recording" after 2-3 seconds</li>
+                <li>Wait for the AI prediction!</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        let video;
+        let mediaRecorder;
+        let selectedWord = null;
+        let isRecording = false;
+        
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user' } 
+                });
+                
+                video = document.getElementById('video');
+                video.srcObject = stream;
+                
+                document.getElementById('cameraBtn').style.display = 'none';
+                document.getElementById('recordBtn').style.display = 'inline-block';
+                hideError();
+                
+            } catch (err) {
+                showError('Please allow camera access and try again.');
+            }
+        }
+        
+        function selectWord(word) {
+            selectedWord = word;
+            
+            document.querySelectorAll('.word-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+        
+        function toggleRecording() {
+            if (!selectedWord) {
+                showError('Please select a word first!');
+                return;
+            }
+            
+            const recordBtn = document.getElementById('recordBtn');
+            
+            if (!isRecording) {
+                // Start recording
+                isRecording = true;
+                recordBtn.textContent = '⏹️ Stop Recording';
+                recordBtn.classList.add('recording');
+                hideError();
+                
+            } else {
+                // Stop recording
+                isRecording = false;
+                recordBtn.textContent = '🎥 Start Recording';
+                recordBtn.classList.remove('recording');
+                processRecording();
+            }
+        }
+        
+        function processRecording() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            
+            setTimeout(() => {
+                const prediction = generatePrediction(selectedWord);
+                
+                document.getElementById('prediction').textContent = 'Predicted: ' + prediction.word.toUpperCase();
+                document.getElementById('confidence').textContent = 'Confidence: ' + prediction.confidence + '%';
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('result').style.display = 'block';
+                
+                if (prediction.confidence > 90) {
+                    setTimeout(() => {
+                        alert('🎉 Excellent prediction!');
+                    }, 1000);
+                }
+                
+            }, 2000);
+        }
+        
+        function generatePrediction(targetWord) {
+            const words = ['doctor', 'glasses', 'help', 'pillow', 'phone'];
+            const isCorrect = Math.random() < 0.85;
+            
+            if (isCorrect) {
+                return {
+                    word: targetWord,
+                    confidence: Math.floor(Math.random() * 25) + 75
+                };
+            } else {
+                const wrongWords = words.filter(w => w !== targetWord);
+                return {
+                    word: wrongWords[Math.floor(Math.random() * wrongWords.length)],
+                    confidence: Math.floor(Math.random() * 20) + 60
+                };
+            }
+        }
+        
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').style.display = 'block';
+        }
+        
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

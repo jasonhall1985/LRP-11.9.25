@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lipreading App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Lipreading App</h1>
+            <p>Speak one of these words: <strong>{{ target_words|join(', ') }}</strong></p>
+        </header>
+
+        <main>
+            <div class="camera-section">
+                <div class="video-container">
+                    <video id="video" autoplay muted playsinline></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                </div>
+                
+                <div class="controls">
+                    <button id="startBtn" class="btn btn-primary">Start Camera</button>
+                    <button id="recordBtn" class="btn btn-record" disabled>Record Word</button>
+                    <button id="stopBtn" class="btn btn-stop" disabled>Stop Recording</button>
+                </div>
+                
+                <div class="status">
+                    <div id="status" class="status-text">Click "Start Camera" to begin</div>
+                    <div id="countdown" class="countdown"></div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div id="results" class="results hidden">
+                    <h3>Prediction Results</h3>
+                    <div class="prediction">
+                        <div class="predicted-word">
+                            <span class="label">Predicted Word:</span>
+                            <span id="predictedWord" class="word"></span>
+                        </div>
+                        <div class="confidence">
+                            <span class="label">Confidence:</span>
+                            <span id="confidence" class="percentage"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="all-probabilities">
+                        <h4>All Word Probabilities:</h4>
+                        <div id="probabilities" class="probability-bars"></div>
+                    </div>
+                </div>
+                
+                <div id="error" class="error hidden">
+                    <h3>Error</h3>
+                    <p id="errorMessage"></p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="instructions">
+                <h3>How to Use:</h3>
+                <ol>
+                    <li>Click "Start Camera" and allow camera access</li>
+                    <li>Position your face in the camera view</li>
+                    <li>Click "Record Word" and speak one of the target words clearly</li>
+                    <li>The app will analyze your lip movements and predict the word</li>
+                </ol>
+                
+                <div class="tips">
+                    <h4>Tips for Better Results:</h4>
+                    <ul>
+                        <li>Ensure good lighting on your face</li>
+                        <li>Keep your face centered in the camera</li>
+                        <li>Speak clearly and naturally</li>
+                        <li>Try to minimize head movement during recording</li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
