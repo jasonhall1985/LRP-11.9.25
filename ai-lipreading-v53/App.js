@@ -12,8 +12,9 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { StatusBar } from 'expo-status-bar';
 
-// Import our trained model (we'll create this)
+// Import our trained models
 import LipreadingModel from './models/LipreadingModel';
+import TemporalLipreadingModel from './models/TemporalLipreadingModel';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,6 +33,7 @@ export default function App() {
   // Refs
   const cameraRef = useRef(null);
   const lipreadingModel = useRef(null);
+  const temporalModel = useRef(null);
   const recordingInterval = useRef(null);
   const lastMotionTime = useRef(null);
 
@@ -42,19 +44,25 @@ export default function App() {
 
   const initializeAI = async () => {
     try {
-      setStatus('🧠 Loading Trained Neural Network...');
+      setStatus('🧠 Loading Temporal Feature Learning Model...');
 
-      // Initialize our trained lipreading model
+      // Initialize temporal model for breaking through accuracy ceiling
+      temporalModel.current = new TemporalLipreadingModel();
+
+      // Also keep pattern model for comparison
       lipreadingModel.current = new LipreadingModel();
 
-      // Load the model (this will use our converted model)
-      const loaded = await lipreadingModel.current.loadModel();
+      // Load the temporal model (CNN + BiLSTM architecture)
+      const temporalLoaded = await temporalModel.current.loadModel();
+      const patternLoaded = await lipreadingModel.current.loadModel();
 
-      if (loaded) {
+      if (temporalLoaded && patternLoaded) {
         setAiReady(true);
-        setStatus('✅ Trained AI Ready! (146K Parameters)');
+        setStatus('✅ Temporal Learning AI Ready! (89K Parameters)');
+        console.log('🎯 Temporal Model Info:', temporalModel.current.getModelInfo());
+        console.log('📊 Pattern Model Info:', lipreadingModel.current.getModelInfo());
       } else {
-        throw new Error('Failed to load trained model');
+        throw new Error('Failed to load temporal learning models');
       }
 
     } catch (error) {
@@ -107,14 +115,19 @@ export default function App() {
       console.log('   Input frames processed:', lipData.length);
       console.log('   Using computer vision algorithms for lip detection');
 
-      // Process the recorded lip data with our trained model
-      const result = await lipreadingModel.current.predict(lipData);
+      // Process with temporal model (CNN + BiLSTM)
+      const temporalResult = await temporalModel.current.predict(lipData);
 
-      setPrediction(result);
-      setStatus(`✅ REAL VIDEO ANALYSIS COMPLETE: ${result.word} (${(result.confidence * 100).toFixed(1)}%)`);
+      // Also get pattern model result for comparison
+      const patternResult = await lipreadingModel.current.predict(lipData);
 
-      console.log('✅ REAL VIDEO PREDICTION:', `${result.word} (${(result.confidence * 100).toFixed(1)}%)`);
-      console.log('   Based on actual camera footage analysis');
+      // Use temporal model as primary prediction
+      setPrediction(temporalResult);
+      setStatus(`✅ TEMPORAL ANALYSIS COMPLETE: ${temporalResult.word} (${(temporalResult.confidence * 100).toFixed(1)}%)`);
+
+      console.log('✅ TEMPORAL PREDICTION:', `${temporalResult.word} (${(temporalResult.confidence * 100).toFixed(1)}%)`);
+      console.log('📊 PATTERN COMPARISON:', `${patternResult.word} (${(patternResult.confidence * 100).toFixed(1)}%)`);
+      console.log('   Based on CNN+BiLSTM temporal sequence learning');
 
       // Show celebration for high confidence
       if (result.confidence > 0.85) {
