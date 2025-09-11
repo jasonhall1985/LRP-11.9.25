@@ -1,0 +1,69 @@
+ICU LIP READING DATASET ANALYSIS REPORT
+==================================================
+
+Total Files: 100
+Target Classes: help, doctor, pillow, glasses, phone
+
+SPLIT DISTRIBUTION:
+--------------------
+TRAIN:
+  Total files: 79
+  Unique speakers: 20
+  Total duration: 147.14 seconds
+  Average duration: 1.86 seconds
+  Class distribution: {'pillow': 17, 'phone': 17, 'help': 15, 'doctor': 15, 'glasses': 15}
+
+VAL:
+  Total files: 11
+  Unique speakers: 9
+  Total duration: 17.05 seconds
+  Average duration: 1.55 seconds
+  Class distribution: {'glasses': 3, 'phone': 2, 'doctor': 2, 'pillow': 2, 'help': 2}
+
+TEST:
+  Total files: 10
+  Unique speakers: 8
+  Total duration: 14.61 seconds
+  Average duration: 1.46 seconds
+  Class distribution: {'doctor': 3, 'help': 3, 'glasses': 2, 'phone': 1, 'pillow': 1}
+
+CLASS ANALYSIS:
+---------------
+HELP:
+  Total: 20 files
+  Train: 15, Val: 2, Test: 3
+  Average duration: 1.83 seconds
+  Unique speakers: 20
+
+DOCTOR:
+  Total: 20 files
+  Train: 15, Val: 2, Test: 3
+  Average duration: 1.67 seconds
+  Unique speakers: 20
+
+PILLOW:
+  Total: 20 files
+  Train: 17, Val: 2, Test: 1
+  Average duration: 1.81 seconds
+  Unique speakers: 20
+
+GLASSES:
+  Total: 20 files
+  Train: 15, Val: 3, Test: 2
+  Average duration: 1.92 seconds
+  Unique speakers: 20
+
+PHONE:
+  Total: 20 files
+  Train: 17, Val: 2, Test: 1
+  Average duration: 1.71 seconds
+  Unique speakers: 20
+
+DATA QUALITY ASSESSMENT:
+-------------------------
+✅ No data leakage detected
+⚠️  SPEAKER LEAKAGE: 12 speakers appear in multiple splits
+✅ No quality issues detected
+
+RECOMMENDATIONS:
+---------------

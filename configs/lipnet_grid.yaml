@@ -1,0 +1,71 @@
+# LipNet GRID Dataset Pretraining Configuration
+
+# Data Configuration
+data:
+  grid_root: "data/grid"
+  batch_size: 8
+  num_workers: 0
+  sequence_length: 75  # Max sequence length for GRID
+  image_size: [96, 96]
+  num_frames: 16
+  train_samples: 500
+  val_samples: 100
+  test_samples: 100
+  
+# Model Configuration
+model:
+  input_channels: 1
+  conv_channels: [32, 64, 96]
+  conv_kernel_size: 3
+  conv_stride: 1
+  conv_padding: 1
+  dropout_rate: 0.2
+
+  # BiGRU Configuration
+  gru_hidden_size: 256
+  gru_num_layers: 2
+  gru_dropout: 0.2
+
+  # Output embedding dimension
+  embedding_dim: 512
+    
+  # CTC Configuration
+  ctc:
+    blank_idx: 0
+    vocab_size: 28  # 26 letters + space + blank
+
+# Training Configuration
+training:
+  epochs: 20
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: "AdamW"
+  
+  # Learning Rate Scheduling
+  scheduler:
+    type: "cosine"
+    warmup_epochs: 5
+    min_lr: 0.00001
+    
+  # Early Stopping
+  early_stopping:
+    patience: 15
+    min_delta: 0.001
+    
+  # Gradient Clipping
+  grad_clip_norm: 1.0
+  
+  # Logging
+  log_interval: 100
+  save_interval: 5
+
+# Validation Configuration
+validation:
+  val_interval: 1
+  
+# Reproducibility
+seed: 42
+
+# Device Configuration
+device: "cpu"
+mixed_precision: false

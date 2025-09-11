@@ -1,0 +1,87 @@
+# ICU 5-Class Classifier Configuration
+
+# Data Configuration
+data:
+  train_dir: "/Users/client/Desktop/TRAINING SET 2.9.25"
+  val_dir: "/Users/client/Desktop/VAL SET"
+  test_dir: "/Users/client/Desktop/TEST SET"
+  
+  # Target classes (FIXED - do not modify)
+  classes: ["doctor", "glasses", "phone", "pillow", "help"]
+  
+  batch_size: 16
+  num_workers: 4
+  image_size: [96, 96]
+  num_frames: 24
+  
+  # Data Augmentation
+  augmentation:
+    brightness_range: [0.8, 1.2]
+    contrast_range: [0.8, 1.2]
+    rotation_range: [-5, 5]  # degrees
+    horizontal_flip: false  # Not recommended for lip reading
+    
+# Model Configuration
+model:
+  # Pretrained encoder path (set to null to train from scratch)
+  pretrained_encoder: null
+  
+  encoder:
+    embedding_dim: 512
+    freeze_epochs: 0  # Don't freeze encoder when training from scratch
+    
+  classifier:
+    hidden_dim: 256
+    dropout_rate: 0.3
+    num_classes: 5
+    
+# Training Configuration
+training:
+  epochs: 50
+  learning_rate: 0.0005
+  weight_decay: 0.0001
+  optimizer: "AdamW"
+  
+  # Learning Rate Scheduling
+  scheduler:
+    type: "step"
+    step_size: 15
+    gamma: 0.5
+    
+  # Early Stopping
+  early_stopping:
+    patience: 10
+    min_delta: 0.001
+    metric: "macro_f1"  # Primary metric for ICU classification
+    
+  # Gradient Clipping
+  grad_clip_norm: 1.0
+  
+  # Class Weighting (auto-computed from data)
+  class_weights: "balanced"
+  
+  # Logging
+  log_interval: 10
+  save_interval: 5
+
+# Validation Configuration
+validation:
+  val_interval: 1
+  
+# Performance Targets
+targets:
+  min_accuracy: 0.80
+  min_macro_f1: 0.80
+  
+# Reproducibility
+seed: 42
+
+# Device Configuration
+device: "cpu"
+mixed_precision: false
+
+# Export Configuration
+export:
+  torchscript: true
+  onnx: true
+  optimize_for_mobile: true
