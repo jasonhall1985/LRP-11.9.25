@@ -8,11 +8,12 @@ export default class EnhancedTemporalModel {
   constructor() {
     this.modelLoaded = false;
     this.targetWords = ['doctor', 'glasses', 'help', 'pillow', 'phone'];
-    this.standardFrameCount = 16;
+    this.standardFrameCount = 32; // Upgraded for multi-syllable capture
     
-    // Enhanced architecture configuration
+    // Enhanced architecture configuration for 96×96 input
     this.architecture = {
       cnn: {
+        inputShape: [32, 96, 96, 1], // 32 frames @ 96×96 grayscale
         layers: [
           { filters: 32, kernelSize: [3, 3], activation: 'relu', batchNorm: true, dropout: 0.25 },
           { filters: 64, kernelSize: [3, 3], activation: 'relu', batchNorm: true, dropout: 0.25 },
@@ -25,7 +26,8 @@ export default class EnhancedTemporalModel {
         units: 128,
         dropout: 0.3,
         recurrentDropout: 0.2,
-        returnSequences: false
+        returnSequences: false,
+        sequenceLength: 32 // Updated for longer sequences
       },
       dense: {
         layers: [
@@ -158,32 +160,37 @@ export default class EnhancedTemporalModel {
     return features;
   }
 
-  // Enhanced preprocessing with data standardization
+  // Enhanced preprocessing with 32-frame @ 96×96 standardization
   preprocessVideoFrames(videoFrames) {
-    console.log('📹 Enhanced preprocessing with temporal standardization...');
-    
-    // 1. Standardize to exactly 16 frames
+    console.log('📹 Enhanced preprocessing with 32-frame @ 96×96 standardization...');
+
+    // 1. Standardize to exactly 32 frames for multi-syllable capture
     const standardizedFrames = this.standardizeFrameCount(videoFrames, this.standardFrameCount);
-    
-    // 2. Extract consistent 64x64 lip ROI
-    const lipROIFrames = this.extractConsistentLipROI(standardizedFrames);
-    
-    // 3. Apply data augmentation (if training)
-    const augmentedFrames = this.applyDataAugmentation(lipROIFrames);
-    
-    // 4. Normalize for CNN input
+
+    // 2. Extract consistent 96×96 lip ROI (upgraded resolution)
+    const lipROIFrames = this.extractConsistentLipROI(standardizedFrames, [96, 96]);
+
+    // 3. Apply quality gates (blur, motion, lighting detection)
+    const qualityFrames = this.applyQualityGates(lipROIFrames);
+
+    // 4. Apply data augmentation (if training)
+    const augmentedFrames = this.applyDataAugmentation(qualityFrames);
+
+    // 5. Normalize for CNN input
     const normalizedFrames = this.normalizeForCNN(augmentedFrames);
-    
-    console.log(`   Standardized: ${this.standardFrameCount} frames`);
-    console.log(`   Lip ROI: 64×64 pixels (consistent)`);
+
+    console.log(`   Standardized: ${this.standardFrameCount} frames (multi-syllable capture)`);
+    console.log(`   Lip ROI: 96×96 pixels (upgraded resolution)`);
+    console.log(`   Quality gates: Applied for data validation`);
     console.log(`   Augmentation: Applied for robustness`);
-    
+
     return {
       frames: normalizedFrames,
       metadata: {
         originalCount: videoFrames.length,
         standardizedCount: this.standardFrameCount,
-        preprocessing: 'enhanced_v2.0'
+        resolution: '96x96',
+        preprocessing: 'enhanced_v3.0_multisyllable'
       }
     };
   }
@@ -248,6 +255,165 @@ export default class EnhancedTemporalModel {
   calculateFrameMotion(frame1, frame2) {
     // Simulate motion calculation
     return Math.random() * 0.5 + 0.25; // 0.25-0.75
+  }
+
+  // Apply quality gates for data validation
+  applyQualityGates(frames) {
+    console.log('🔍 Applying quality gates: blur, motion, lighting detection...');
+
+    const qualityFrames = frames.map((frame, i) => {
+      // 1. Blur detection (Laplacian variance)
+      const blurScore = this.calculateBlurScore(frame);
+      const isBlurry = blurScore < 100; // Threshold for acceptable sharpness
+
+      // 2. Motion detection (frame-to-frame difference)
+      const motionScore = i > 0 ? this.calculateFrameMotion(frames[i-1], frame) : 0.5;
+      const hasMotion = motionScore > 0.1 && motionScore < 0.8; // Not too static, not too fast
+
+      // 3. Lighting detection (histogram analysis)
+      const lightingScore = this.calculateLightingScore(frame);
+      const hasGoodLighting = lightingScore > 0.3 && lightingScore < 0.9; // Not too dark/bright
+
+      // 4. Mouth visibility check
+      const mouthVisibility = this.checkMouthVisibility(frame);
+      const mouthVisible = mouthVisibility > 0.7; // Mouth clearly visible
+
+      return {
+        ...frame,
+        quality: {
+          blur: { score: blurScore, pass: !isBlurry },
+          motion: { score: motionScore, pass: hasMotion },
+          lighting: { score: lightingScore, pass: hasGoodLighting },
+          mouth: { score: mouthVisibility, pass: mouthVisible },
+          overall: !isBlurry && hasMotion && hasGoodLighting && mouthVisible
+        }
+      };
+    });
+
+    const passedFrames = qualityFrames.filter(f => f.quality.overall);
+    const qualityRate = (passedFrames.length / frames.length) * 100;
+
+    console.log(`   Quality rate: ${qualityRate.toFixed(1)}% (${passedFrames.length}/${frames.length} frames)`);
+
+    // If too many frames fail, flag for re-recording
+    if (qualityRate < 70) {
+      console.warn('⚠️ Low quality rate - consider re-recording with better conditions');
+    }
+
+    return qualityFrames; // Return all frames with quality metadata
+  }
+
+  // Calculate blur score using Laplacian variance
+  calculateBlurScore(frame) {
+    // Simulate Laplacian variance calculation
+    // Higher values = sharper image
+    return Math.random() * 200 + 50; // 50-250 range
+  }
+
+  // Calculate lighting score from histogram
+  calculateLightingScore(frame) {
+    // Simulate histogram analysis
+    // 0.0 = too dark, 1.0 = too bright, 0.3-0.9 = good range
+    return Math.random() * 0.8 + 0.1; // 0.1-0.9 range
+  }
+
+  // Check mouth visibility in frame
+  checkMouthVisibility(frame) {
+    // Simulate mouth detection confidence
+    // Higher values = mouth clearly visible
+    return Math.random() * 0.4 + 0.6; // 0.6-1.0 range
+  }
+
+  // Extract consistent lip ROI with configurable resolution
+  extractConsistentLipROI(frames, targetSize = [96, 96]) {
+    console.log(`🎯 Extracting consistent ${targetSize[0]}×${targetSize[1]} lip ROI...`);
+
+    return frames.map((frame, i) => {
+      // Simulate MediaPipe lip landmark detection (landmarks 61-80)
+      const lipLandmarks = this.detectLipLandmarks(frame);
+
+      // Calculate lip bounding box with consistent scaling
+      const lipBounds = this.calculateLipBounds(lipLandmarks, targetSize);
+
+      // Extract and resize ROI to target size
+      const lipROI = this.extractROI(frame, lipBounds, targetSize);
+
+      // Apply mouth centering (mouth width = 60% of frame)
+      const centeredROI = this.centerMouthInFrame(lipROI, targetSize);
+
+      return {
+        frameIndex: i,
+        lipROI: centeredROI,
+        landmarks: lipLandmarks,
+        bounds: lipBounds,
+        resolution: `${targetSize[0]}x${targetSize[1]}`
+      };
+    });
+  }
+
+  // Detect lip landmarks (MediaPipe points 61-80)
+  detectLipLandmarks(frame) {
+    // Simulate MediaPipe lip landmark detection
+    const landmarks = [];
+    for (let i = 61; i <= 80; i++) {
+      landmarks.push({
+        id: i,
+        x: Math.random() * 0.6 + 0.2, // 0.2-0.8 range (centered)
+        y: Math.random() * 0.3 + 0.4, // 0.4-0.7 range (mouth area)
+        z: Math.random() * 0.1 - 0.05 // Small depth variation
+      });
+    }
+    return landmarks;
+  }
+
+  // Calculate lip bounding box with consistent scaling
+  calculateLipBounds(landmarks, targetSize) {
+    // Find min/max coordinates
+    const xCoords = landmarks.map(l => l.x);
+    const yCoords = landmarks.map(l => l.y);
+
+    const minX = Math.min(...xCoords);
+    const maxX = Math.max(...xCoords);
+    const minY = Math.min(...yCoords);
+    const maxY = Math.max(...yCoords);
+
+    // Add padding for consistent lip box (20% padding)
+    const width = maxX - minX;
+    const height = maxY - minY;
+    const padding = 0.2;
+
+    return {
+      x: minX - width * padding,
+      y: minY - height * padding,
+      width: width * (1 + 2 * padding),
+      height: height * (1 + 2 * padding),
+      centerX: (minX + maxX) / 2,
+      centerY: (minY + maxY) / 2
+    };
+  }
+
+  // Extract ROI from frame
+  extractROI(frame, bounds, targetSize) {
+    // Simulate ROI extraction and resize to target size
+    return {
+      pixels: new Array(targetSize[0] * targetSize[1]).fill(0).map(() => Math.random()),
+      width: targetSize[0],
+      height: targetSize[1],
+      channels: 1 // Grayscale
+    };
+  }
+
+  // Center mouth in frame (mouth width = 60% of frame)
+  centerMouthInFrame(roi, targetSize) {
+    // Simulate mouth centering with consistent scaling
+    const mouthWidthRatio = 0.6; // Mouth should be 60% of frame width
+
+    return {
+      ...roi,
+      centered: true,
+      mouthWidthRatio: mouthWidthRatio,
+      scaling: 'consistent'
+    };
   }
 
   // Enhanced prediction with learned temporal features
