@@ -2,6 +2,8 @@
 
 A complete production-ready lip-reading system for ICU patient communication using deep learning. The system recognizes 5 critical communication words: **doctor**, **glasses**, **phone**, **pillow**, and **help**.
 
+> **Note**: This repository contains both a complete deep learning system (this README) and a mobile web app implementation. See the mobile app files for the web-based version.
+
 ## 🎯 System Overview
 
 This project implements a state-of-the-art lip-reading system specifically designed for ICU environments where patients may be unable to speak due to intubation or other medical conditions.
@@ -9,7 +11,7 @@ This project implements a state-of-the-art lip-reading system specifically desig
 ### Key Features
 
 - **Full LipNet Architecture**: 5.6M parameter model with 3D convolutions and bidirectional GRU
-- **Multi-head Attention**: Advanced temporal aggregation for robust sequence classification  
+- **Multi-head Attention**: Advanced temporal aggregation for robust sequence classification
 - **Production-Ready**: Comprehensive training pipeline with early stopping, checkpointing, and evaluation
 - **Class-Balanced Training**: Weighted loss functions to handle imbalanced datasets
 - **Comprehensive Evaluation**: Accuracy, F1-scores, confusion matrices, and per-class analysis
@@ -191,6 +193,18 @@ For questions or collaboration opportunities, please open an issue or contact th
 
 ---
 
-**Status**: ✅ Complete implementation with full training pipeline  
-**Performance**: 40% accuracy, 24.9% macro-F1 (baseline established)  
+**Status**: ✅ Complete implementation with full training pipeline
+**Performance**: 40% accuracy, 24.9% macro-F1 (baseline established)
 **Next Steps**: Data augmentation and hyperparameter optimization for target performance
+
+## 📱 Mobile Web App Version
+
+This repository also contains a mobile-friendly web application version of the lip-reading system. The mobile app features:
+
+- **Real-time lip detection** using MediaPipe Face Mesh
+- **5-word vocabulary recognition**: doctor, glasses, help, pillow, phone
+- **Mobile-responsive design** optimized for iPhone browsers
+- **Live webcam integration** for real-time predictions
+- **TensorFlow/Keras CNN + LSTM** architecture
+
+The mobile app was developed for educational purposes and provides a lightweight alternative to the full deep learning system documented above.

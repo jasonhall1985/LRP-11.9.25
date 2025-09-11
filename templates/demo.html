@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lipreading App - Demo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Lipreading App - Demo</h1>
+            <p>This demo shows how the app works with example predictions</p>
+            <a href="/" class="btn btn-primary" style="display: inline-block; margin-top: 1rem; text-decoration: none;">← Back to Live App</a>
+        </header>
+
+        <main>
+            <div class="camera-section">
+                <h2>How It Works</h2>
+                <div class="demo-steps">
+                    <div class="step">
+                        <h3>1. Camera Access</h3>
+                        <p>The app requests access to your phone's front-facing camera to capture your lip movements.</p>
+                    </div>
+                    
+                    <div class="step">
+                        <h3>2. Lip Detection</h3>
+                        <p>Using MediaPipe Face Mesh, the app detects your face and extracts the lip region from each video frame.</p>
+                    </div>
+                    
+                    <div class="step">
+                        <h3>3. Preprocessing</h3>
+                        <p>Lip regions are resized to 64x64 pixels, converted to grayscale, and normalized for the neural network.</p>
+                    </div>
+                    
+                    <div class="step">
+                        <h3>4. Sequence Analysis</h3>
+                        <p>The CNN-LSTM model analyzes 30 frames of lip movement to predict which word was spoken.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2>Example Predictions</h2>
+                
+                <div class="demo-prediction">
+                    <h3>Example 1: "Doctor"</h3>
+                    <div class="prediction">
+                        <div class="predicted-word">
+                            <span class="label">Predicted Word:</span>
+                            <span class="word">DOCTOR</span>
+                        </div>
+                        <div class="confidence">
+                            <span class="label">Confidence:</span>
+                            <span class="percentage">87.3%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="all-probabilities">
+                        <h4>All Word Probabilities:</h4>
+                        <div class="probability-bars">
+                            <div class="probability-bar">
+                                <div class="probability-label">
+                                    <span class="probability-word">DOCTOR</span>
+                                    <span class="probability-value">87.3%</span>
+                                </div>
+                                <div class="probability-fill">
+                                    <div class="probability-fill-inner" style="width: 87.3%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="probability-bar">
+                                <div class="probability-label">
+                                    <span class="probability-word">PILLOW</span>
+                                    <span class="probability-value">5.2%</span>
+                                </div>
+                                <div class="probability-fill">
+                                    <div class="probability-fill-inner" style="width: 5.2%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="probability-bar">
+                                <div class="probability-label">
+                                    <span class="probability-word">PHONE</span>
+                                    <span class="probability-value">3.8%</span>
+                                </div>
+                                <div class="probability-fill">
+                                    <div class="probability-fill-inner" style="width: 3.8%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="probability-bar">
+                                <div class="probability-label">
+                                    <span class="probability-word">GLASSES</span>
+                                    <span class="probability-value">2.1%</span>
+                                </div>
+                                <div class="probability-fill">
+                                    <div class="probability-fill-inner" style="width: 2.1%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="probability-bar">
+                                <div class="probability-label">
+                                    <span class="probability-word">HELP</span>
+                                    <span class="probability-value">1.6%</span>
+                                </div>
+                                <div class="probability-fill">
+                                    <div class="probability-fill-inner" style="width: 1.6%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="instructions">
+                <h3>Technical Details</h3>
+                <div class="tech-details">
+                    <div class="tech-item">
+                        <h4>Model Architecture</h4>
+                        <ul>
+                            <li>CNN layers for spatial feature extraction</li>
+                            <li>LSTM layers for temporal sequence modeling</li>
+                            <li>Input: 30 frames of 64x64 grayscale lip regions</li>
+                            <li>Output: 5-class classification probabilities</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-item">
+                        <h4>Training Data</h4>
+                        <ul>
+                            <li>20 videos per word (100 total training videos)</li>
+                            <li>Separate validation and test sets</li>
+                            <li>Cross-person generalization testing</li>
+                            <li>Data augmentation for robustness</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-item">
+                        <h4>Technology Stack</h4>
+                        <ul>
+                            <li>MediaPipe for face/lip detection</li>
+                            <li>TensorFlow/Keras for deep learning</li>
+                            <li>Flask for web backend</li>
+                            <li>HTML5 Canvas for video processing</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="class-info">
+                    <h3>Class Presentation Notes</h3>
+                    <ul>
+                        <li>Demonstrate live prediction with different people</li>
+                        <li>Show confidence scores and probability distributions</li>
+                        <li>Explain the challenge of cross-person generalization</li>
+                        <li>Discuss potential applications in accessibility technology</li>
+                        <li>Highlight the mobile-first design approach</li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

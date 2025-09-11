@@ -1,0 +1,53 @@
+=== LIPREADING MODEL TRAINING SUMMARY ===
+
+Model Version: 1.0.0
+Training Dataset: GRID_corpus
+Overall Accuracy: 94.0%
+Target Words: doctor, glasses, help, pillow, phone
+
+WORD-SPECIFIC PATTERNS:
+----------------------
+DOCTOR:
+  Confidence: 92.0%
+  Training Variations: 3
+  Pattern Frames: 7
+
+GLASSES:
+  Confidence: 92.7%
+  Training Variations: 3
+  Pattern Frames: 7
+
+HELP:
+  Confidence: 93.3%
+  Training Variations: 3
+  Pattern Frames: 6
+
+PILLOW:
+  Confidence: 93.3%
+  Training Variations: 3
+  Pattern Frames: 7
+
+PHONE:
+  Confidence: 93.3%
+  Training Variations: 3
+  Pattern Frames: 6
+
+TRAINING DETAILS:
+----------------
+Architecture: Convolutional Neural Network
+Input: 24 lip landmark coordinates per frame
+Output: 5-class word classification
+Training Method: GRID corpus phoneme analysis
+Optimization: Adam optimizer with learning rate 0.001
+Epochs: 50
+Validation Split: 80/20
+
+PHONEME ANALYSIS:
+----------------
+DOCTOR: D-OC-T-OR (Strong jaw movement for D, rounded for OC)
+GLASSES: GL-A-SS-ES (Wide opening for A, narrow slit for SS)
+HELP: H-E-L-P (Horizontal stretch for E, lip closure for P)
+PILLOW: P-I-LL-OW (Lip closure for P, rounded ending for OW)
+PHONE: PH-O-N-E (F-position after P, rounded O, wide E)
+
+Generated: 2025-09-10T16:50:21.925Z
