@@ -299,17 +299,100 @@ class StandardizedPreprocessingPipeline:
             
     def convert_to_grayscale(self, frame: np.ndarray) -> np.ndarray:
         """
-        Convert frame to grayscale.
+        Convert frame to grayscale with proper normalization.
+
+        Uses weighted RGB to grayscale conversion, applies CLAHE for consistent contrast,
+        and normalizes pixel intensity values for uniform brightness across videos.
 
         Args:
             frame: Input frame (BGR format)
 
         Returns:
-            Grayscale frame
+            Normalized grayscale frame with enhanced contrast and consistent brightness
         """
-        if len(frame.shape) == 3:
-            return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        return frame
+        if len(frame.shape) == 2:
+            # Already grayscale, just normalize
+            gray_frame = frame
+        else:
+            # Proper weighted RGB to grayscale conversion (ITU-R BT.709 standard)
+            # OpenCV uses BGR format, so we need to handle that
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # Apply standardized grayscale normalization
+        normalized_frame = self.apply_grayscale_normalization(gray_frame)
+
+        return normalized_frame
+
+    def apply_grayscale_normalization(self, gray_frame: np.ndarray) -> np.ndarray:
+        """
+        Apply comprehensive grayscale normalization for consistent brightness and contrast.
+
+        Args:
+            gray_frame: Input grayscale frame
+
+        Returns:
+            Normalized grayscale frame
+        """
+        # Step 1: Ensure proper data type
+        if gray_frame.dtype != np.uint8:
+            gray_frame = np.clip(gray_frame, 0, 255).astype(np.uint8)
+
+        # Step 2: Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
+        # This enhances local contrast while preventing over-amplification
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced_frame = clahe.apply(gray_frame)
+
+        # Step 3: Normalize to standard intensity range with preserved detail
+        # Calculate robust statistics (ignore extreme outliers)
+        hist = cv2.calcHist([enhanced_frame], [0], None, [256], [0, 256])
+        cumsum = np.cumsum(hist)
+        total_pixels = enhanced_frame.shape[0] * enhanced_frame.shape[1]
+
+        # Find 2nd and 98th percentiles for robust normalization
+        p2_idx = np.where(cumsum >= total_pixels * 0.02)[0]
+        p98_idx = np.where(cumsum >= total_pixels * 0.98)[0]
+
+        if len(p2_idx) > 0 and len(p98_idx) > 0:
+            p2_val = p2_idx[0]
+            p98_val = p98_idx[0]
+
+            # Avoid division by zero
+            if p98_val > p2_val:
+                # Normalize to 0-255 range using robust percentiles
+                normalized = np.clip(
+                    (enhanced_frame.astype(np.float32) - p2_val) * 255.0 / (p98_val - p2_val),
+                    0, 255
+                ).astype(np.uint8)
+            else:
+                normalized = enhanced_frame
+        else:
+            normalized = enhanced_frame
+
+        # Step 4: Apply slight gamma correction for better facial detail visibility
+        # Gamma = 1.1 slightly brightens mid-tones while preserving shadows and highlights
+        gamma = 1.1
+        gamma_table = np.array([((i / 255.0) ** (1.0 / gamma)) * 255 for i in range(256)]).astype(np.uint8)
+        gamma_corrected = cv2.LUT(normalized, gamma_table)
+
+        # Step 5: Final intensity standardization
+        # Target mean brightness around 128 (middle gray) with controlled variance
+        current_mean = gamma_corrected.mean()
+        target_mean = 128.0
+
+        # Apply gentle brightness adjustment if needed
+        if abs(current_mean - target_mean) > 15:  # Only adjust if significantly off
+            adjustment = target_mean - current_mean
+            # Limit adjustment to prevent over-correction
+            adjustment = np.clip(adjustment, -30, 30)
+
+            final_frame = np.clip(
+                gamma_corrected.astype(np.float32) + adjustment,
+                0, 255
+            ).astype(np.uint8)
+        else:
+            final_frame = gamma_corrected
+
+        return final_frame
 
     def process_single_video(self, video_path: str, video_name: str = None) -> Dict[str, Any]:
         """
