@@ -1,0 +1,101 @@
+class,filename,original_video,is_duplicate,duplicate_of,quality_check,valid
+doctor,doctor_01_original.mp4,doctor 2,False,,Frame count mismatch: 30 (expected 32),False
+doctor,doctor_02_original.mp4,doctor 15,False,,Frame count mismatch: 30 (expected 32),False
+doctor,doctor_03_original.mp4,doctor 6,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_04_original.mp4,doctor 11,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_05_original.mp4,doctor 1,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_06_original.mp4,doctor 16,False,,Frame count mismatch: 31 (expected 32),False
+doctor,doctor_07_original.mp4,doctor 12,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_08_original.mp4,doctor 18,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_09_original.mp4,doctor 8,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_10_original.mp4,doctor 19,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_11_original.mp4,doctor 20,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_12_original.mp4,doctor 13,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_13_original.mp4,doctor 4,False,,"Valid: 32 frames, 640x432px",True
+doctor,doctor_14_original.mp4,doctor 17,False,,Frame count mismatch: 31 (expected 32),False
+doctor,doctor_15_original.mp4,doctor 10,False,,Frame count mismatch: 31 (expected 32),False
+doctor,doctor_16_original.mp4,doctor 3,False,,Frame count mismatch: 31 (expected 32),False
+doctor,doctor_17_dup01.mp4,doctor 11,True,doctor 11,"Valid: 32 frames, 640x432px",True
+doctor,doctor_18_dup02.mp4,doctor 2,True,doctor 2,Frame count mismatch: 30 (expected 32),False
+doctor,doctor_19_dup03.mp4,doctor 4,True,doctor 4,"Valid: 32 frames, 640x432px",True
+doctor,doctor_20_dup04.mp4,doctor 1,True,doctor 1,"Valid: 32 frames, 640x432px",True
+glasses,glasses_01_original.mp4,glasses 9,False,,Frame count mismatch: 26 (expected 32),False
+glasses,glasses_02_original.mp4,glasses 20,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_03_original.mp4,glasses 19,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_04_original.mp4,glasses 13,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_05_original.mp4,glasses 17,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_06_original.mp4,glasses 4,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_07_original.mp4,glasses 3,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_08_original.mp4,glasses 7,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_09_original.mp4,glasses 14,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_10_original.mp4,glasses 6,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_11_original.mp4,glasses 15,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_12_original.mp4,glasses 11,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_13_original.mp4,glasses 2,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_14_original.mp4,glasses 16,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_15_original.mp4,glasses 5,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_16_original.mp4,glasses 1,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_17_original.mp4,glasses 12,False,,"Valid: 32 frames, 640x432px",True
+glasses,glasses_18_original.mp4,glasses 18,False,,Frame count mismatch: 26 (expected 32),False
+glasses,glasses_19_original.mp4,glasses 8,False,,Frame count mismatch: 31 (expected 32),False
+glasses,glasses_20_dup01.mp4,glasses 7,True,glasses 7,"Valid: 32 frames, 640x432px",True
+help,help_01_original.mp4,help 20,False,,"Valid: 32 frames, 640x432px",True
+help,help_02_original.mp4,help 8,False,,Frame count mismatch: 31 (expected 32),False
+help,help_03_original.mp4,help 6,False,,"Valid: 32 frames, 640x432px",True
+help,help_04_original.mp4,help 2,False,,"Valid: 32 frames, 640x432px",True
+help,help_05_original.mp4,help 14,False,,"Valid: 32 frames, 640x432px",True
+help,help_06_original.mp4,help 10,False,,Frame count mismatch: 31 (expected 32),False
+help,help_07_original.mp4,help 17,False,,"Valid: 32 frames, 640x432px",True
+help,help_08_original.mp4,help 13,False,,"Valid: 32 frames, 640x432px",True
+help,help_09_original.mp4,help 5,False,,"Valid: 32 frames, 640x432px",True
+help,help_10_original.mp4,help 1,False,,"Valid: 32 frames, 640x432px",True
+help,help_11_original.mp4,help 12,False,,"Valid: 32 frames, 640x432px",True
+help,help_12_original.mp4,help 4,False,,"Valid: 32 frames, 640x432px",True
+help,help_13_original.mp4,help 3,False,,"Valid: 32 frames, 640x432px",True
+help,help_14_original.mp4,help 7,False,,"Valid: 32 frames, 640x432px",True
+help,help_15_original.mp4,help 11,False,,"Valid: 32 frames, 640x432px",True
+help,help_16_original.mp4,help 15,False,,Frame count mismatch: 30 (expected 32),False
+help,help_17_original.mp4,help 9,False,,Frame count mismatch: 30 (expected 32),False
+help,help_18_original.mp4,help 18,False,,"Valid: 32 frames, 640x432px",True
+help,help_19_dup01.mp4,help 13,True,help 13,"Valid: 32 frames, 640x432px",True
+help,help_20_dup02.mp4,help 14,True,help 14,"Valid: 32 frames, 640x432px",True
+phone,phone_01_original.mp4,phone 12,False,,Frame count mismatch: 31 (expected 32),False
+phone,phone_02_original.mp4,phone 16,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_03_original.mp4,phone 9,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_04_original.mp4,phone 15,False,,Frame count mismatch: 31 (expected 32),False
+phone,phone_05_original.mp4,phone 7,False,,Frame count mismatch: 31 (expected 32),False
+phone,phone_06_original.mp4,phone 3,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_07_original.mp4,phone 4,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_08_original.mp4,phone 18,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_09_original.mp4,phone 1,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_10_original.mp4,phone 5,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_11_original.mp4,phone 20,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_12_original.mp4,phone 2,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_13_original.mp4,phone 6,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_14_original.mp4,phone 8,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_15_original.mp4,phone 14,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_16_original.mp4,phone 10,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_17_original.mp4,phone 17,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_18_original.mp4,phone 13,False,,"Valid: 32 frames, 640x432px",True
+phone,phone_19_dup01.mp4,phone 15,True,phone 15,Frame count mismatch: 31 (expected 32),False
+phone,phone_20_dup02.mp4,phone 9,True,phone 9,"Valid: 32 frames, 640x432px",True
+pillow,pillow_01_original.mp4,pillow 10,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_02_original.mp4,pillow 14,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_03_original.mp4,pillow 13,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_04_original.mp4,pillow 17,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_05_original.mp4,pillow 8,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_06_original.mp4,pillow 6,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_07_original.mp4,pillow 2,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_08_original.mp4,pillow 20,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_09_original.mp4,pillow 19,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_10_original.mp4,pillow 5,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_11_original.mp4,pillow 1,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_12_original.mp4,pillow 4,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_13_original.mp4,pillow 3,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_14_original.mp4,pillow 7,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_15_original.mp4,pillow 18,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_16_original.mp4,pillow 16,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_17_original.mp4,pillow 12,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_18_original.mp4,pillow 9,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_19_original.mp4,pillow 15,False,,"Valid: 32 frames, 640x432px",True
+pillow,pillow_20_original.mp4,pillow 11,False,,"Valid: 32 frames, 640x432px",True
