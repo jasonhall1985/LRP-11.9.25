@@ -1,0 +1,20 @@
+SUCCESSFUL VIDEO FILTERING SUMMARY
+==================================================
+
+Total videos analyzed: 2047
+Successful videos identified: 1092
+Videos successfully copied: 1092
+Missing source files: 0
+Success rate: 53.3%
+
+CLASS DISTRIBUTION:
+------------------------------
+doctor: 170 videos
+glasses: 167 videos
+help: 153 videos
+phone: 163 videos
+pillow: 179 videos
+unknown: 260 videos
+
+Filtered videos ready for mouth cropping pipeline.
+Output directory: data/successful_videos

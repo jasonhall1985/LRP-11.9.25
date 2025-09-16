@@ -1,0 +1,161 @@
+COMBINED MOTION & LIP DETECTION ANALYSIS REPORT
+================================================================================
+
+Analysis completed: 2025-09-13 03:57:05
+⚠️  NO FILES WERE MODIFIED - ANALYSIS ONLY
+
+DATASET OVERVIEW:
+--------------------------------------------------
+Total videos analyzed: 2047
+Motion analysis coverage: 2047 videos
+Lip detection coverage: 2047 videos
+Combined analysis coverage: 2047 videos
+
+QUALITY DISTRIBUTION:
+--------------------------------------------------
+Poor: 1910 videos (93.3%)
+Good: 74 videos (3.6%)
+Moderate: 62 videos (3.0%)
+Excellent: 1 videos (0.0%)
+
+CLASS-WISE QUALITY ANALYSIS:
+==================================================
+
+DOCTOR:
+  Total videos: 302
+  Excellent: 1 (0.3%)
+  Good: 16 (5.3%)
+  Moderate: 12 (4.0%)
+  Poor: 273 (90.4%)
+  Mean motion score: 0.0065
+  Mean lip detection rate: 0.0415
+  Mean combined quality: 0.0310
+
+GLASSES:
+  Total videos: 301
+  Excellent: 0 (0.0%)
+  Good: 11 (3.7%)
+  Moderate: 14 (4.7%)
+  Poor: 276 (91.7%)
+  Mean motion score: 0.0028
+  Mean lip detection rate: 0.0390
+  Mean combined quality: 0.0282
+
+PHONE:
+  Total videos: 293
+  Excellent: 0 (0.0%)
+  Good: 12 (4.1%)
+  Moderate: 7 (2.4%)
+  Poor: 274 (93.5%)
+  Mean motion score: 0.0030
+  Mean lip detection rate: 0.0224
+  Mean combined quality: 0.0166
+
+PILLOW:
+  Total videos: 353
+  Excellent: 0 (0.0%)
+  Good: 11 (3.1%)
+  Moderate: 14 (4.0%)
+  Poor: 328 (92.9%)
+  Mean motion score: 0.0051
+  Mean lip detection rate: 0.0239
+  Mean combined quality: 0.0183
+
+HELP:
+  Total videos: 305
+  Excellent: 0 (0.0%)
+  Good: 8 (2.6%)
+  Moderate: 6 (2.0%)
+  Poor: 291 (95.4%)
+  Mean motion score: 0.0029
+  Mean lip detection rate: 0.0277
+  Mean combined quality: 0.0202
+
+CORRELATION ANALYSIS:
+--------------------------------------------------
+Motion-Lip Detection Correlation: -0.011
+Correlation strength: very weak
+
+TOP 10 QUALITY VIDEOS:
+--------------------------------------------------
+ 1. glasses__useruser01__65plus__female__caucasian__20250730T034725.mp4
+    Class: glasses
+    Motion Score: 0.0000
+    Lip Detection Rate: 1.0000
+    Combined Quality: 0.7000
+
+ 2. i_need_to_move__useruser01__40to64__female__caucasian__20250820T065056.mp4
+    Class: unknown
+    Motion Score: 0.0000
+    Lip Detection Rate: 1.0000
+    Combined Quality: 0.7000
+
+ 3. pillow__useruser01__40to64__female__caucasian__20250820T065303.mp4
+    Class: pillow
+    Motion Score: 0.0000
+    Lip Detection Rate: 1.0000
+    Combined Quality: 0.7000
+
+ 4. pillow__useruser01__65plus__female__caucasian__20250730T034713.mp4
+    Class: pillow
+    Motion Score: 0.0000
+    Lip Detection Rate: 1.0000
+    Combined Quality: 0.7000
+
+ 5. help__useruser01__18to39__male__caucasian__20250912T165147.mp4
+    Class: help
+    Motion Score: 0.0000
+    Lip Detection Rate: 1.0000
+    Combined Quality: 0.7000
+
+ 6. i_need_to_move__useruser01__40to64__female__caucasian__20250820T065039.mp4
+    Class: unknown
+    Motion Score: 0.0000
+    Lip Detection Rate: 1.0000
+    Combined Quality: 0.7000
+
+ 7. phone__useruser01__65plus__female__caucasian__20250731T054653.mp4
+    Class: phone
+    Motion Score: 0.0000
+    Lip Detection Rate: 0.9841
+    Combined Quality: 0.6889
+
+ 8. glasses__useruser01__65plus__female__caucasian__20250730T034738.mp4
+    Class: glasses
+    Motion Score: 0.0000
+    Lip Detection Rate: 0.9718
+    Combined Quality: 0.6803
+
+ 9. my_mouth_is_dry__useruser01__40to64__female__caucasian__20250820T065020.mp4
+    Class: unknown
+    Motion Score: 0.0000
+    Lip Detection Rate: 0.9520
+    Combined Quality: 0.6664
+
+10. i_need_to_move__useruser01__65plus__female__caucasian__20250723T051208.mp4
+    Class: unknown
+    Motion Score: 0.0000
+    Lip Detection Rate: 0.9091
+    Combined Quality: 0.6364
+
+FILTERING RECOMMENDATIONS:
+==================================================
+Based on combined motion and lip detection analysis:
+
+• TIER 1 (Excellent): 1 videos
+  - High motion AND high lip detection
+  - Recommended for primary training set
+
+• TIER 2 (Good): 74 videos
+  - Either high motion OR high lip detection
+  - Suitable for training with careful review
+
+• TIER 3 (Moderate): 62 videos
+  - Some motion or lip detection present
+  - Consider for augmentation or validation set
+
+THRESHOLD RECOMMENDATIONS:
+------------------------------
+• Current thresholds are too restrictive
+• Consider lowering motion threshold to 0.01-0.03
+• Consider lowering lip detection threshold to 0.50-0.60

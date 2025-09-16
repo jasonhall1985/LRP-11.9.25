@@ -1,0 +1,100 @@
+STAGE 2: SIMPLE LIP MOTION ANALYSIS REPORT
+======================================================================
+
+Analysis completed: 2025-09-13 21:53:18
+Motion threshold: 0.15 (15% of frames)
+Pixel change threshold: 0.02 (2% pixel change)
+⚠️  NO FILES WERE MODIFIED - ANALYSIS ONLY
+
+OVERALL STATISTICS:
+--------------------------------------------------
+Total videos analyzed: 2047
+Successful analysis: 2047 (100.0%)
+Videos with sufficient lip motion: 89 (4.3%)
+Videos with insufficient lip motion: 1958 (95.7%)
+
+LIP MOTION RATE STATISTICS:
+--------------------------------------------------
+Mean motion rate: 0.0213
+Median motion rate: 0.0000
+Standard deviation: 0.0720
+Min motion rate: 0.0000
+Max motion rate: 0.7793
+
+CLASS-WISE DETAILED ANALYSIS:
+==================================================
+
+DOCTOR:
+  Total videos: 302
+  Sufficient motion: 18 (6.0%)
+  Excellent motion (≥30%): 9
+  Good motion (15-30%): 9
+  Moderate motion (5-15%): 18
+  Poor motion (0-5%): 39
+  No motion (0%): 227
+  Mean motion rate: 0.0285
+  Median motion rate: 0.0000
+  Mean sustained sequences: 0.3
+
+GLASSES:
+  Total videos: 301
+  Sufficient motion: 14 (4.7%)
+  Excellent motion (≥30%): 3
+  Good motion (15-30%): 11
+  Moderate motion (5-15%): 18
+  Poor motion (0-5%): 53
+  No motion (0%): 216
+  Mean motion rate: 0.0219
+  Median motion rate: 0.0000
+  Mean sustained sequences: 0.2
+
+PHONE:
+  Total videos: 293
+  Sufficient motion: 6 (2.0%)
+  Excellent motion (≥30%): 3
+  Good motion (15-30%): 3
+  Moderate motion (5-15%): 16
+  Poor motion (0-5%): 44
+  No motion (0%): 227
+  Mean motion rate: 0.0136
+  Median motion rate: 0.0000
+  Mean sustained sequences: 0.1
+
+PILLOW:
+  Total videos: 353
+  Sufficient motion: 20 (5.7%)
+  Excellent motion (≥30%): 8
+  Good motion (15-30%): 12
+  Moderate motion (5-15%): 10
+  Poor motion (0-5%): 46
+  No motion (0%): 277
+  Mean motion rate: 0.0225
+  Median motion rate: 0.0000
+  Mean sustained sequences: 0.3
+
+HELP:
+  Total videos: 305
+  Sufficient motion: 12 (3.9%)
+  Excellent motion (≥30%): 3
+  Good motion (15-30%): 9
+  Moderate motion (5-15%): 18
+  Poor motion (0-5%): 50
+  No motion (0%): 225
+  Mean motion rate: 0.0207
+  Median motion rate: 0.0000
+  Mean sustained sequences: 0.2
+
+THRESHOLD ANALYSIS & RECOMMENDATIONS:
+==================================================
+Pass rates at different lip motion thresholds:
+  0.05: 192/2047 videos (9.4%)
+  0.10: 120/2047 videos (5.9%)
+  0.15: 89/2047 videos (4.3%)
+  0.20: 66/2047 videos (3.2%)
+  0.25: 51/2047 videos (2.5%)
+  0.30: 33/2047 videos (1.6%)
+
+RECOMMENDATIONS:
+------------------------------
+• Dataset has low lip motion overall - consider threshold of 0.05-0.10
+• Very few videos pass current threshold - consider lowering significantly

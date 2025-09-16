@@ -1,0 +1,257 @@
+# Production-Ready 7-Class Lip Reading Trainer Configuration
+# Optimized for >80% generalization accuracy with R(2+1)D-18 backbone
+
+# Model Architecture
+model:
+  backbone: "r2plus1d_18"
+  pretrained_weights: "R2Plus1D_18_Weights.KINETICS400_V1"
+  num_classes: 7
+  dropout: 0.3                   # Increased dropout for regularization
+  freeze_backbone: true
+  freeze_epochs: 3                # Gradual unfreezing: layer4→layer3→all
+  unfreeze_layers: ["layer3", "layer4"]  # Keep these unfrozen for stability
+
+# Data Configuration
+data:
+  clip_len: 32                    # Increased from 24 for better performance
+  clip_len_max: 40                # Optional bump for later experiments
+  img_size: 132                   # Input video resolution (132x100 ICU format)
+  resize_for_backbone: 112        # R(2+1)D requires 112x112 minimum
+  grayscale_mode: 'average_weights' # How to handle 1→3 channel conversion
+  temporal_sampling: 'uniform'    # uniform, random, center
+  padding_mode: 'loop'           # loop, repeat, zero for <24 frames
+  
+  # CLAHE Enhancement
+  clahe_enabled: true
+  clahe_clip_limit: 2.0          # CLAHE contrast enhancement
+  clahe_tile_grid: [8, 8]        # CLAHE tile grid size
+  
+  # Normalization
+  normalize_range: [0, 1]        # Normalize to [0,1] range
+  mean: [0.5]                    # Grayscale mean
+  std: [0.5]                     # Grayscale std
+
+# Training Hyperparameters
+training:
+  batch_size: 16                 # Conservative for 132×100×24 clips
+  epochs: 100                    # Increased for >80% target
+  early_stop_patience: 6         # Reduced patience for stability
+  early_stop_metric: "val_macro_f1"   # Stop on validation macro-F1
+  min_delta: 0.001              # Minimum improvement threshold
+  
+  # Mixed Precision
+  mixed_precision: true          # Use AMP for faster training
+  grad_scaler: true             # Automatic loss scaling
+  
+  # Gradient Management
+  grad_clip: 1.0                # Gradient clipping
+  grad_accumulation_steps: 1    # Gradient accumulation
+  
+  # Memory Management
+  auto_batch_size: true         # Automatic batch size adjustment on OOM
+  max_batch_size: 32            # Maximum batch size to try
+  min_batch_size: 4             # Minimum batch size
+
+# Optimization
+optimizer:
+  name: "adamw"
+  head_lr: 0.0002               # Head learning rate (2e-4)
+  backbone_lr: 0.00002          # Backbone learning rate (2e-5)
+  weight_decay: 0.01            # Weight decay for regularization
+  betas: [0.9, 0.999]
+  eps: 0.00000001
+  amsgrad: false
+
+# Learning Rate Scheduling
+scheduler:
+  name: "cosine_with_restarts"
+  warmup_epochs: 1              # 1-epoch warmup as requested
+  T_0: 10                       # Cosine restart period
+  T_mult: 2                     # Period multiplier
+  eta_min: 0.000001             # Minimum learning rate
+  
+  # Progressive Unfreezing
+  unfreeze_schedule:
+    - epoch: 3
+      layers: ["layer4"]
+    - epoch: 6
+      layers: ["layer3", "layer4"]
+    - epoch: 10
+      layers: ["layer2", "layer3", "layer4"]
+    - epoch: 15
+      layers: "all"
+
+# Loss Configuration
+loss:
+  name: "cross_entropy"         # cross_entropy, focal_loss, label_smoothing
+  label_smoothing: 0.05         # Reduced for stability
+  
+  # Focal Loss (if enabled)
+  focal_alpha: null             # Auto-compute from class frequencies
+  focal_gamma: 2.0              # Focusing parameter
+
+# Data Balancing
+balance:
+  method: "weighted_sampler"    # [weighted_sampler|focal_loss|duplicate|none]
+  weight_mode: "inverse_sqrt"   # inverse, inverse_sqrt, effective_num
+  effective_beta: 0.9999        # For effective number weighting
+
+# Dataset Splits (Demographic-Based Stratification)
+splits:
+  val_holdout: "age_band=40-64"
+  test_holdout: "gender=female,age_band=18-39"
+  min_val_pct: 10               # Minimum validation percentage
+  min_test_pct: 10              # Minimum test percentage
+  stratify_by: ["class", "gender", "age_band"]
+
+# Data Augmentation (Light augmentations only)
+augmentation:
+  enabled: true
+
+  # Temporal Augmentations
+  temporal_jitter: 0.10         # ±10% temporal variation
+  temporal_dropout: 0.0         # No temporal dropout
+
+  # Spatial Augmentations (Tiny affine transforms)
+  affine_deg: 2.0               # ±2° rotation (tiny affine)
+  affine_px: 4                  # ±4px translation (tiny affine)
+  brightness: 0.10              # ±10% brightness variation
+  contrast: 0.10                # ±10% contrast variation
+
+  # Disabled Augmentations (NO flips as requested)
+  hflip: false                  # NO horizontal flip
+  vflip: false                  # NO vertical flip
+  elastic_transform: false      # NO elastic deformation
+
+  # Probability of applying augmentations
+  aug_prob: 0.3                 # Light augmentation probability
+
+# Validation and Metrics
+validation:
+  frequency: 1                  # Validate every N epochs
+  metrics:
+    - "accuracy"
+    - "macro_f1"
+    - "weighted_f1"
+    - "per_class_f1"
+    - "confusion_matrix"
+    - "roc_auc"
+  
+  # Statistical Testing
+  significance_test: true       # Perform statistical significance tests
+  confidence_interval: 0.95    # 95% confidence intervals
+  bootstrap_samples: 1000      # Bootstrap samples for CI
+
+# Checkpointing and Logging
+checkpointing:
+  save_best: true               # Save best model by metric
+  save_last: true               # Save last epoch
+  save_frequency: 5             # Save every N epochs
+  metric: "val_macro_f1"        # Metric for best model
+  mode: "max"                   # max or min
+  
+  # Model State
+  save_optimizer: true          # Save optimizer state
+  save_scheduler: true          # Save scheduler state
+  save_scaler: true            # Save gradient scaler state
+
+# Logging Configuration
+logging:
+  level: "INFO"                 # DEBUG, INFO, WARNING, ERROR
+  log_frequency: 10             # Log every N batches
+  
+  # Weights & Biases
+  wandb:
+    enabled: false              # Enable W&B logging
+    project: "lip_reading_7class"
+    entity: null                # W&B entity
+    tags: ["r2plus1d", "7class", "production"]
+  
+  # TensorBoard
+  tensorboard:
+    enabled: true               # Enable TensorBoard logging
+    log_graph: true             # Log model graph
+    log_images: false           # Log sample images (memory intensive)
+
+# Hardware Configuration
+hardware:
+  device: "auto"                # auto, cpu, cuda, mps
+  gpu_id: 0                     # GPU ID if multiple GPUs
+  num_workers: 0                # DataLoader workers (disabled for CLAHE compatibility)
+  pin_memory: false             # Pin memory disabled for single-threaded
+  prefetch_factor: null         # Prefetch disabled for single-threaded
+  persistent_workers: false     # Workers disabled
+  
+  # Memory Management
+  empty_cache_frequency: 100    # Empty CUDA cache every N batches
+  memory_fraction: 0.9          # Use 90% of GPU memory
+
+# Reproducibility
+reproducibility:
+  seed: 42                      # Random seed
+  deterministic: true           # Deterministic operations
+  benchmark: false              # Disable cudnn benchmark for reproducibility
+  
+# Class Configuration
+classes:
+  names: ["help", "doctor", "glasses", "phone", "pillow", "i_need_to_move", "my_mouth_is_dry"]
+  
+  # Class name variations for parsing
+  variations:
+    help: ["help", "HELP", "Help"]
+    doctor: ["doctor", "DOCTOR", "Doctor"]
+    glasses: ["glasses", "GLASSES", "Glasses"]
+    phone: ["phone", "PHONE", "Phone"]
+    pillow: ["pillow", "PILLOW", "Pillow"]
+    i_need_to_move: ["i_need_to_move", "I_NEED_TO_MOVE", "i need to move", "I NEED TO MOVE"]
+    my_mouth_is_dry: ["my_mouth_is_dry", "MY_MOUTH_IS_DRY", "my mouth is dry", "MY MOUTH IS DRY"]
+
+# Paths Configuration (with space handling)
+paths:
+  # Training Data Sources
+  training_sources:
+    - "/Users/client/Desktop/LRP classifier 11.9.25/data/videos for training 14.9.25 not cropped completely /13.9.25top7dataset_cropped"
+    - "/Users/client/Desktop/training set 2.9.25"
+  
+  # Validation/Test Data Sources  
+  validation_sources:
+    - "/Users/client/Desktop/VAL set"
+  
+  test_sources:
+    - "/Users/client/Desktop/test set"
+  
+  # Processed Videos (V3 > V2 > original priority)
+  processed_dir: "fixed_temporal_output/full_processed"
+  
+  # Output Directories
+  output_dir: "./experiments"
+  manifest_file: "clean_balanced_manifest.csv"
+  
+# Model EMA Configuration
+ema:
+  enabled: true
+  beta: 0.999                   # EMA decay factor
+  update_after_step: true       # Update EMA after each optimizer step
+  validate_with_ema: true       # Use EMA weights for validation
+
+# Class Balancing Configuration
+balance:
+  method: "sampler"             # Start with WeightedRandomSampler
+  auto_switch: true             # Auto-switch to duplicate if needed
+  switch_patience: 2            # Switch after 2 epochs without improvement
+  duplicate_cap: 0.90           # Cap duplicates to 90% of largest class
+
+# Test-Time Augmentation (TTA)
+tta:
+  enabled: false                # Disabled by default
+  num_crops: 3                  # Number of evenly spaced crops
+  test_only: true               # Only for TEST set, not VAL
+
+# Performance Targets
+targets:
+  accuracy: 0.80                # >80% target accuracy
+  macro_f1: 0.75               # Target macro-F1 score
+  min_per_class_f1: 0.60       # Minimum per-class F1
+
+  # Early Achievement Bonus
+  early_stop_bonus: 0.85        # Stop early if this accuracy reached

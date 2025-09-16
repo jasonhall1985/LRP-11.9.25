@@ -1,0 +1,120 @@
+STAGE 2: LIP DETECTION ANALYSIS REPORT - ICU LIP-READING DATASET
+================================================================================
+
+Analysis completed: 2025-09-13 03:55:05
+Lip detection threshold: 0.8 (80% of frames)
+⚠️  NO FILES WERE MODIFIED - ANALYSIS ONLY
+
+OVERALL STATISTICS:
+------------------------------------------------------------
+Total videos analyzed: 2047
+Successful analysis: 2047 (100.0%)
+Videos with sufficient lip detection: 22 (1.1%)
+Videos with insufficient lip detection: 2025 (98.9%)
+
+LIP DETECTION RATE STATISTICS:
+------------------------------------------------------------
+Mean detection rate: 0.0296
+Median detection rate: 0.0000
+Standard deviation: 0.1208
+Min detection rate: 0.0000
+Max detection rate: 1.0000
+25th percentile: 0.0000
+75th percentile: 0.0000
+
+CLASS-WISE DETAILED ANALYSIS:
+============================================================
+
+DOCTOR:
+  Total videos: 302
+  Sufficient detection: 4 (1.3%)
+  Excellent detection (≥90%): 0
+  Good detection (80-90%): 4
+  Moderate detection (50-80%): 4
+  Poor detection (0-50%): 56
+  Failed detection (0%): 238
+  Mean detection rate: 0.0415
+  Median detection rate: 0.0000
+  Std deviation: 0.1351
+  Mean lip area: 809.6 pixels²
+  Mean bbox stability: 0.961
+
+GLASSES:
+  Total videos: 301
+  Sufficient detection: 4 (1.3%)
+  Excellent detection (≥90%): 2
+  Good detection (80-90%): 2
+  Moderate detection (50-80%): 4
+  Poor detection (0-50%): 65
+  Failed detection (0%): 228
+  Mean detection rate: 0.0390
+  Median detection rate: 0.0000
+  Std deviation: 0.1343
+  Mean lip area: 842.5 pixels²
+  Mean bbox stability: 0.957
+
+PHONE:
+  Total videos: 293
+  Sufficient detection: 3 (1.0%)
+  Excellent detection (≥90%): 1
+  Good detection (80-90%): 2
+  Moderate detection (50-80%): 2
+  Poor detection (0-50%): 27
+  Failed detection (0%): 261
+  Mean detection rate: 0.0224
+  Median detection rate: 0.0000
+  Std deviation: 0.1144
+  Mean lip area: 548.9 pixels²
+  Mean bbox stability: 0.976
+
+PILLOW:
+  Total videos: 353
+  Sufficient detection: 3 (0.8%)
+  Excellent detection (≥90%): 2
+  Good detection (80-90%): 1
+  Moderate detection (50-80%): 3
+  Poor detection (0-50%): 52
+  Failed detection (0%): 295
+  Mean detection rate: 0.0239
+  Median detection rate: 0.0000
+  Std deviation: 0.1120
+  Mean lip area: 938.1 pixels²
+  Mean bbox stability: 0.955
+
+HELP:
+  Total videos: 305
+  Sufficient detection: 2 (0.7%)
+  Excellent detection (≥90%): 1
+  Good detection (80-90%): 1
+  Moderate detection (50-80%): 1
+  Poor detection (0-50%): 64
+  Failed detection (0%): 238
+  Mean detection rate: 0.0277
+  Median detection rate: 0.0000
+  Std deviation: 0.1080
+  Mean lip area: 893.4 pixels²
+  Mean bbox stability: 0.947
+
+THRESHOLD ANALYSIS & RECOMMENDATIONS:
+============================================================
+Pass rates at different lip detection thresholds:
+  0.50: 39/2047 videos (1.9%)
+  0.60: 30/2047 videos (1.5%)
+  0.70: 26/2047 videos (1.3%)
+  0.80: 22/2047 videos (1.1%)
+  0.90: 10/2047 videos (0.5%)
+  0.95: 9/2047 videos (0.4%)
+
+MOTION-LIP DETECTION CORRELATION:
+------------------------------------------------------------
+Correlation coefficient: -0.011
+Correlation strength: weak
+High motion + High lip detection: 1 videos
+High motion + Low lip detection: 53 videos
+Low motion + High lip detection: 21 videos
+
+RECOMMENDATIONS:
+----------------------------------------
+• Dataset has low lip detection rates overall - consider lowering threshold
+• Very few videos pass current threshold - consider significant reduction
+• Some classes have very few videos with good lip detection

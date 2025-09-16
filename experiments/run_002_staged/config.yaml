@@ -1,0 +1,131 @@
+adaptive_rules:
+  balance_switch:
+    enabled: true
+    patience: 2
+  overfitting_response:
+    enabled: true
+    halve_head_lr: true
+    increase_dropout: true
+    keep_backbone_lr: true
+    maintain_augmentations: true
+    trigger_patience: 2
+    trigger_threshold: 0.4
+  sequence_length_increase:
+    enabled: true
+    new_clip_len: 40
+    trigger_patience: 4
+augmentations:
+  affine_rotation: 2
+  affine_translation: 4
+  brightness_contrast: 0.1
+  enabled: true
+  horizontal_flip: false
+  random_erase:
+    area_range:
+    - 0.02
+    - 0.05
+    aspect_ratio_range:
+    - 0.3
+    - 3.0
+    probability: 0.2
+  temporal_jitter: 0.1
+balance:
+  auto_switch: true
+  duplicate_cap: 0.9
+  method: weighted_sampler
+checkpointing:
+  save_best: true
+  save_frequency: 2
+  save_last: true
+classes:
+  names:
+  - pillow
+  - pain
+  - suction
+  - turn
+  - mouth_care
+  - comfortable
+  - oral_care
+data:
+  clahe_enabled: true
+  clip_len: 32
+  img_size: 112
+  resize_for_backbone: 112
+early_stopping:
+  enabled: true
+  metric: val_macro_f1
+  min_delta: 0.001
+  patience: 8
+ema:
+  beta: 0.999
+  enabled: true
+evaluation:
+  confusion_matrix: true
+  generate_report: true
+  per_class_metrics: true
+  tta:
+    average_logits: true
+    enabled: true
+    temporal_crops: 3
+hardware:
+  num_workers: 0
+  persistent_workers: false
+  pin_memory: false
+  prefetch_factor: null
+logging:
+  level: INFO
+  log_frequency: 1
+  log_per_class_metrics: true
+loss:
+  label_smoothing: 0.05
+  name: cross_entropy
+model:
+  dropout: 0.4
+  freeze_backbone: false
+  num_classes: 7
+  unfreeze_layers: []
+normalization:
+  mean:
+  - 0.43216
+  - 0.394666
+  - 0.37645
+  std:
+  - 0.22803
+  - 0.22145
+  - 0.216989
+optimizer:
+  backbone_lr: 1e-5
+  betas:
+  - 0.9
+  - 0.999
+  head_lr: 2e-4
+  name: adamw
+  weight_decay: 0.01
+paths:
+  manifest_file: clean_balanced_manifest.csv
+  video_dir: ''
+scheduler:
+  T_0: 5
+  T_mult: 1
+  min_lr: 1e-7
+  name: cosine_with_restarts
+  warmup_epochs: 1
+splits:
+  min_test_pct: 10
+  min_val_pct: 10
+  test_criteria: gender=female AND age_band=18-39
+  train_criteria: remaining
+  val_criteria: age_band=40-64
+targets:
+  accuracy_threshold: 0.8
+  early_stop_bonus: 0.85
+training:
+  accumulation_steps: 1
+  batch_size: 16
+  epochs: 10
+  gradient_clip_norm: 1.0
+  label_smoothing: 0.05
+  mixed_precision: true
+  num_epochs: 10
+  staged_training: true
+  weight_decay: 0.01

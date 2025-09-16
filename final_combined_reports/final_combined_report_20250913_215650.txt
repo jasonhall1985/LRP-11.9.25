@@ -1,0 +1,219 @@
+FINAL COMBINED ANALYSIS REPORT
+OVERALL MOTION + LIP-SPECIFIC MOTION ANALYSIS
+================================================================================
+
+Analysis completed: 2025-09-13 21:56:50
+⚠️  NO FILES WERE MODIFIED - ANALYSIS ONLY
+
+EXECUTIVE SUMMARY:
+==================================================
+This analysis combines overall frame motion detection with focused
+lip region motion detection to identify the highest quality videos
+for lip-reading model training.
+
+DATASET OVERVIEW:
+--------------------------------------------------
+Total videos analyzed: 2047
+Overall motion analysis coverage: 2047 videos
+Lip motion analysis coverage: 2047 videos
+Combined analysis coverage: 2047 videos
+
+QUALITY TIER DISTRIBUTION:
+==================================================
+Tier 6 - Poor (Low motion overall): 1850 videos (90.4%)
+Tier 4 - Moderate (Lip motion 5-15%): 103 videos (5.0%)
+Tier 1 - Excellent (Lip motion ≥30%): 33 videos (1.6%)
+Tier 3 - Good (Lip motion ≥15%): 32 videos (1.6%)
+Tier 2 - Very Good (Lip ≥15% + Overall ≥3%): 24 videos (1.2%)
+Tier 5 - Motion Only (Overall ≥3%, Lip <5%): 5 videos (0.2%)
+
+CLASS-WISE QUALITY ANALYSIS:
+==================================================
+
+DOCTOR:
+  Total videos: 302
+  Tier 1 (Excellent): 9
+  Tier 2 (Very Good): 5
+  Tier 3 (Good): 4
+  Top 3 Tiers Total: 18 (6.0%)
+  Mean overall motion: 0.0065
+  Mean lip motion: 0.0285
+  Mean final quality: 0.0241
+
+GLASSES:
+  Total videos: 301
+  Tier 1 (Excellent): 3
+  Tier 2 (Very Good): 5
+  Tier 3 (Good): 6
+  Top 3 Tiers Total: 14 (4.7%)
+  Mean overall motion: 0.0028
+  Mean lip motion: 0.0219
+  Mean final quality: 0.0181
+
+PHONE:
+  Total videos: 293
+  Tier 1 (Excellent): 3
+  Tier 2 (Very Good): 3
+  Tier 3 (Good): 0
+  Top 3 Tiers Total: 6 (2.0%)
+  Mean overall motion: 0.0030
+  Mean lip motion: 0.0136
+  Mean final quality: 0.0115
+
+PILLOW:
+  Total videos: 353
+  Tier 1 (Excellent): 8
+  Tier 2 (Very Good): 3
+  Tier 3 (Good): 9
+  Top 3 Tiers Total: 20 (5.7%)
+  Mean overall motion: 0.0051
+  Mean lip motion: 0.0225
+  Mean final quality: 0.0190
+
+HELP:
+  Total videos: 305
+  Tier 1 (Excellent): 3
+  Tier 2 (Very Good): 4
+  Tier 3 (Good): 5
+  Top 3 Tiers Total: 12 (3.9%)
+  Mean overall motion: 0.0029
+  Mean lip motion: 0.0207
+  Mean final quality: 0.0172
+
+FILTERING RECOMMENDATIONS:
+==================================================
+
+CONSERVATIVE FILTERING:
+  Description: Keep only Tier 1 (Excellent lip motion)
+  Criteria: lip_motion_rate >= 0.30
+  Videos retained: 33
+  Retention rate: 1.6%
+  Pros: Highest quality videos with clear lip movement
+  Cons: Very small dataset, may lack diversity
+
+BALANCED FILTERING:
+  Description: Keep Tier 1-3 (Good+ lip motion)
+  Criteria: lip_motion_rate >= 0.15
+  Videos retained: 89
+  Retention rate: 4.3%
+  Pros: Good balance of quality and quantity
+  Cons: Still relatively small dataset
+
+INCLUSIVE FILTERING:
+  Description: Keep Tier 1-4 (Moderate+ lip motion)
+  Criteria: lip_motion_rate >= 0.05
+  Videos retained: 192
+  Retention rate: 9.4%
+  Pros: Larger dataset for training
+  Cons: Includes videos with minimal lip movement
+
+TOP QUALITY VIDEOS BY TIER:
+==================================================
+
+Tier 1 Excellent:
+  1. doctor__useruser01__65plus__female__caucasian__20250721T070841.mp4
+     Class: doctor
+     Overall Motion: 0.3172
+     Lip Motion: 0.7793
+     Final Quality: 0.6869
+
+  2. my_mouth_is_dry__useruser01__18to39__male__caucasian__20250820T055215.mp4
+     Class: unknown
+     Overall Motion: 0.3767
+     Lip Motion: 0.7329
+     Final Quality: 0.6616
+
+  3. pillow__useruser01__40to64__female__caucasian__20250825T115113.mp4
+     Class: pillow
+     Overall Motion: 0.5608
+     Lip Motion: 0.6824
+     Final Quality: 0.6581
+
+  4. my_mouth_is_dry__useruser01__18to39__male__caucasian__20250820T055233.mp4
+     Class: unknown
+     Overall Motion: 0.4490
+     Lip Motion: 0.6531
+     Final Quality: 0.6122
+
+  5. pillow__useruser01__18to39__female__asian__20250902T014011.mp4
+     Class: pillow
+     Overall Motion: 0.5333
+     Lip Motion: 0.6000
+     Final Quality: 0.5867
+
+
+Tier 2 Very Good:
+  1. doctor__useruser01__65plus__female__caucasian__20250819T063018.mp4
+     Class: doctor
+     Overall Motion: 0.2027
+     Lip Motion: 0.2635
+     Final Quality: 0.2514
+
+  2. pillow__useruser01__18to39__male__not_specified__20250830T020426.mp4
+     Class: pillow
+     Overall Motion: 0.0676
+     Lip Motion: 0.2973
+     Final Quality: 0.2514
+
+  3. help__useruser01__18to39__male__not_specified__20250830T020202.mp4
+     Class: help
+     Overall Motion: 0.1333
+     Lip Motion: 0.2800
+     Final Quality: 0.2507
+
+  4. doctor__useruser01__18to39__male__not_specified__20250830T020311.mp4
+     Class: doctor
+     Overall Motion: 0.1125
+     Lip Motion: 0.2750
+     Final Quality: 0.2425
+
+  5. pillow__useruser01__18to39__male__not_specified__20250830T020439.mp4
+     Class: pillow
+     Overall Motion: 0.0519
+     Lip Motion: 0.2727
+     Final Quality: 0.2286
+
+
+Tier 3 Good:
+  1. doctor__useruser01__18to39__male__not_specified__20250827T052630.mp4
+     Class: doctor
+     Overall Motion: 0.0133
+     Lip Motion: 0.2800
+     Final Quality: 0.2267
+
+  2. glasses__useruser01__65plus__female__caucasian__20250721T072310.mp4
+     Class: glasses
+     Overall Motion: 0.0286
+     Lip Motion: 0.2714
+     Final Quality: 0.2229
+
+  3. glasses__useruser01__40to64__female__caucasian__20250723T042520.mp4
+     Class: glasses
+     Overall Motion: 0.0185
+     Lip Motion: 0.2593
+     Final Quality: 0.2111
+
+  4. i_need_to_move__useruser01__40to64__male__caucasian__20250820T054844.mp4
+     Class: unknown
+     Overall Motion: 0.0000
+     Lip Motion: 0.2632
+     Final Quality: 0.2105
+
+  5. glasses__useruser01__18to39__male__not_specified__20250904T124636.mp4
+     Class: glasses
+     Overall Motion: 0.0100
+     Lip Motion: 0.2600
+     Final Quality: 0.2100
+
+FINAL RECOMMENDATIONS:
+==================================================
+Based on the comprehensive analysis:
+
+• RECOMMENDED: Conservative filtering (Tier 1 only)
+  - Sufficient high-quality videos available
+  - Focus on videos with excellent lip movement
+
+• Lip motion is more predictive than overall motion for lip-reading
+• Focus filtering criteria on lip_motion_rate >= 0.15
+• Consider manual review of borderline cases
+• Correlation between overall and lip motion: 0.713

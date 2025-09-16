@@ -1,0 +1,184 @@
+# Staged Fine-Tuning Configuration for Lip-Reading
+# Enhanced regularization with corrected overfitting handling
+
+# Paths Configuration
+paths:
+  manifest_file: "clean_balanced_manifest.csv"
+  video_dir: ""  # Will be inferred from manifest
+
+# Data Configuration
+data:
+  img_size: 96   # Input image size (96x96 ICU dataset format)
+  resize_for_backbone: 112  # 96×96 → 112×112 for pretrained model compatibility
+  clip_len: 24   # Extract exactly 24 frames using uniform temporal sampling
+  clahe_enabled: true  # Apply CLAHE consistently across all splits
+
+# Model Configuration  
+model:
+  num_classes: 7
+  dropout: 0.4  # Initial dropout, will be increased to 0.5 if overfitting detected
+  freeze_backbone: false  # Will be controlled by staged training
+  unfreeze_layers: []  # Controlled by staged training schedule
+
+# Training Configuration
+training:
+  staged_training: true  # Enable staged fine-tuning approach
+  epochs: 10  # Maximum epochs across all stages
+  num_epochs: 10  # Maximum epochs across all stages
+  batch_size: 16
+  accumulation_steps: 1
+
+  # Enhanced regularization
+  label_smoothing: 0.05
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+
+  # Mixed precision training
+  mixed_precision: true
+
+# Optimizer Configuration (Differential Learning Rates)
+optimizer:
+  name: "adamw"
+  head_lr: 2e-4      # Head learning rate (will be 3e-4 for Stage A)
+  backbone_lr: 1e-5  # Backbone learning rate (Stage B and C)
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+
+# Scheduler Configuration
+scheduler:
+  name: "cosine_with_restarts"
+  warmup_epochs: 1  # 1-epoch linear warmup
+  min_lr: 1e-7
+  T_0: 5
+  T_mult: 1
+
+# Loss Configuration
+loss:
+  name: "cross_entropy"
+  label_smoothing: 0.05
+
+# EMA Configuration
+ema:
+  enabled: true
+  beta: 0.999  # Exponential Moving Average with β=0.999
+
+# Early Stopping Configuration
+early_stopping:
+  enabled: true
+  patience: 8  # 8 epochs patience on VAL macro-F1
+  metric: "val_macro_f1"
+  min_delta: 0.001
+
+# Checkpointing Configuration
+checkpointing:
+  save_best: true
+  save_last: true
+  save_frequency: 2  # Save checkpoint every 2 epochs
+
+# Augmentation Configuration (TRAIN split only)
+augmentations:
+  enabled: true
+  # Temporal Augmentations
+  temporal_jitter: 0.1  # ±10% of video duration for start frame selection
+  
+  # Spatial Augmentations  
+  affine_rotation: 2    # rotation ≤2°
+  affine_translation: 4 # translation ≤4 pixels
+  
+  # Photometric Augmentations
+  brightness_contrast: 0.10  # brightness/contrast adjustment ±0.10 (10% variation)
+  
+  # Occlusion Augmentation
+  random_erase:
+    probability: 0.2
+    area_range: [0.02, 0.05]  # 2-5% of frame area
+    aspect_ratio_range: [0.3, 3.0]
+  
+  # NO horizontal flipping (preserves lip-reading spatial consistency)
+  horizontal_flip: false
+
+# Class Configuration
+classes:
+  names: ["doctor", "glasses", "help", "i_need_to_move", "my_mouth_is_dry", "phone", "pillow"]
+
+# Splits Configuration (Demographic Stratification)
+splits:
+  # Fixed demographic stratification
+  val_criteria: "age_band=40-64"  # Both genders, age 40-64
+  test_criteria: "gender=female AND age_band=18-39"  # Female 18-39
+  train_criteria: "remaining"  # All other demographics
+  
+  # Validation thresholds
+  min_val_pct: 10
+  min_test_pct: 10
+
+# Balance Configuration
+balance:
+  method: "weighted_sampler"  # Start with WeightedRandomSampler
+  auto_switch: true  # Switch to duplicate balancing if no improvement for 2 epochs
+  duplicate_cap: 0.9  # Cap minority classes to ≤90% of largest class size
+
+# Adaptive Training Rules
+adaptive_rules:
+  # Balance Strategy Switching
+  balance_switch:
+    enabled: true
+    patience: 2  # Switch after 2 epochs of no improvement
+    
+  # Overfitting Detection & Correction (CRITICAL FIX)
+  overfitting_response:
+    enabled: true
+    trigger_threshold: 0.40  # 40 percentage point gap
+    trigger_patience: 2  # 2 consecutive epochs
+    
+    # Response Actions (CORRECTED)
+    increase_dropout: true    # INCREASE dropout: 0.4 → 0.5
+    maintain_augmentations: true  # MAINTAIN current augmentation levels
+    halve_head_lr: true      # HALVE head learning rate
+    keep_backbone_lr: true   # KEEP backbone learning rate at 1e-5
+    
+  # Secondary Response
+  sequence_length_increase:
+    enabled: true
+    trigger_patience: 4  # If still no improvement after 2 more epochs
+    new_clip_len: 40     # Increase from 32 → 40 frames
+
+# Normalization Configuration (Enhanced Pipeline)
+normalization:
+  # Kinetics-400 statistics for 3-channel grayscale
+  # Applied AFTER grayscale replication to 3 channels
+  mean: [0.43216, 0.394666, 0.37645]
+  std: [0.22803, 0.22145, 0.216989]
+
+# Evaluation Configuration
+evaluation:
+  # Test-Time Augmentation (TEST only, never VAL)
+  tta:
+    enabled: true
+    temporal_crops: 3  # 3 evenly-spaced temporal crops
+    average_logits: true
+    
+  # Per-class metrics logging
+  per_class_metrics: true
+  confusion_matrix: true
+  
+  # Comprehensive reporting
+  generate_report: true
+
+# Target Configuration
+targets:
+  accuracy_threshold: 0.80  # >80% generalization accuracy target
+  early_stop_bonus: 0.95   # Stop early if this accuracy is achieved (set high to prevent premature stopping)
+
+# Hardware Configuration
+hardware:
+  num_workers: 0  # Disable multiprocessing to avoid CLAHE pickling issues
+  pin_memory: false  # Disable pin_memory when num_workers=0
+  prefetch_factor: null  # Must be null when num_workers=0
+  persistent_workers: false
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  log_per_class_metrics: true
+  log_frequency: 1  # Log every epoch

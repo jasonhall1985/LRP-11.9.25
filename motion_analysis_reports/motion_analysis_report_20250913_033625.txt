@@ -1,0 +1,98 @@
+MOTION ANALYSIS REPORT - ICU LIP-READING DATASET
+======================================================================
+
+Analysis completed: 2025-09-13 03:36:25
+Motion threshold: 0.1 (10% of frames)
+Pixel change threshold: 0.05 (5% pixel change)
+⚠️  NO FILES WERE MODIFIED - ANALYSIS ONLY
+
+OVERALL STATISTICS:
+--------------------------------------------------
+Total videos analyzed: 2047
+Videos with sufficient motion: 23 (1.1%)
+Videos with insufficient motion: 2024 (98.9%)
+
+MOTION SCORE STATISTICS:
+--------------------------------------------------
+Mean motion score: 0.0041
+Median motion score: 0.0000
+Standard deviation: 0.0285
+Min motion score: 0.0000
+Max motion score: 0.5608
+25th percentile: 0.0000
+75th percentile: 0.0000
+
+CLASS-WISE DETAILED ANALYSIS:
+==================================================
+
+DOCTOR:
+  Total videos: 302
+  Sufficient motion: 9 (3.0%)
+  High motion (≥20%): 2
+  Medium motion (10-20%): 7
+  Low motion (5-10%): 5
+  Minimal motion (<5%): 288
+  Mean motion score: 0.0065
+  Median motion score: 0.0000
+  Std deviation: 0.0299
+
+GLASSES:
+  Total videos: 301
+  Sufficient motion: 0 (0.0%)
+  High motion (≥20%): 0
+  Medium motion (10-20%): 0
+  Low motion (5-10%): 7
+  Minimal motion (<5%): 294
+  Mean motion score: 0.0028
+  Median motion score: 0.0000
+  Std deviation: 0.0135
+
+PHONE:
+  Total videos: 293
+  Sufficient motion: 2 (0.7%)
+  High motion (≥20%): 0
+  Medium motion (10-20%): 2
+  Low motion (5-10%): 7
+  Minimal motion (<5%): 284
+  Mean motion score: 0.0030
+  Median motion score: 0.0000
+  Std deviation: 0.0142
+
+PILLOW:
+  Total videos: 353
+  Sufficient motion: 3 (0.8%)
+  High motion (≥20%): 2
+  Medium motion (10-20%): 1
+  Low motion (5-10%): 5
+  Minimal motion (<5%): 345
+  Mean motion score: 0.0051
+  Median motion score: 0.0000
+  Std deviation: 0.0423
+
+HELP:
+  Total videos: 305
+  Sufficient motion: 4 (1.3%)
+  High motion (≥20%): 0
+  Medium motion (10-20%): 4
+  Low motion (5-10%): 2
+  Minimal motion (<5%): 299
+  Mean motion score: 0.0029
+  Median motion score: 0.0000
+  Std deviation: 0.0189
+
+THRESHOLD ANALYSIS & RECOMMENDATIONS:
+==================================================
+Pass rates at different motion thresholds:
+  0.01: 101/2047 videos (4.9%)
+  0.03: 62/2047 videos (3.0%)
+  0.05: 54/2047 videos (2.6%)
+  0.07: 41/2047 videos (2.0%)
+  0.10: 23/2047 videos (1.1%)
+  0.15: 11/2047 videos (0.5%)
+  0.20: 8/2047 videos (0.4%)
+
+RECOMMENDATIONS:
+------------------------------
+• Dataset has very low motion overall - consider threshold of 0.03 or lower
+• Very few videos pass current threshold - consider lowering significantly
+• Some classes have NO videos with sufficient motion - threshold too high

@@ -1,0 +1,132 @@
+MEDIAPIPE CROPPED FACE LIP DETECTION REPORT
+======================================================================
+
+Analysis completed: 2025-09-13 22:39:41
+Detection confidence threshold: 0.3
+Tracking confidence threshold: 0.3
+Success threshold: 0.5 (50% of frames)
+Optimized for cropped face videos with lips in top-middle region
+⚠️  NO FILES WERE MODIFIED - ANALYSIS ONLY
+
+SUMMARY STATISTICS:
+--------------------------------------------------
+Total videos analyzed: 2047
+Videos with successful lip detection: 1092 (53.3%)
+Videos with FAILED lip detection: 955 (46.7%)
+
+SUCCESSFUL VIDEOS STATISTICS:
+--------------------------------------------------
+Mean lip detection rate: 0.917
+Median lip detection rate: 1.000
+Min lip detection rate: 0.500
+Max lip detection rate: 1.000
+Mean good quality rate: 0.856
+Median good quality rate: 0.993
+
+CLASS-WISE DETAILED ANALYSIS:
+==================================================
+
+DOCTOR:
+  Total videos: 302
+  Successful detection: 170 (56.3%)
+  Failed detection: 132 (43.7%)
+  Mean detection rate (successful): 0.934
+  Mean detection rate (failed): 0.097
+
+GLASSES:
+  Total videos: 301
+  Successful detection: 167 (55.5%)
+  Failed detection: 134 (44.5%)
+  Mean detection rate (successful): 0.909
+  Mean detection rate (failed): 0.103
+
+PHONE:
+  Total videos: 293
+  Successful detection: 163 (55.6%)
+  Failed detection: 130 (44.4%)
+  Mean detection rate (successful): 0.913
+  Mean detection rate (failed): 0.134
+
+PILLOW:
+  Total videos: 353
+  Successful detection: 179 (50.7%)
+  Failed detection: 174 (49.3%)
+  Mean detection rate (successful): 0.913
+  Mean detection rate (failed): 0.112
+
+HELP:
+  Total videos: 305
+  Successful detection: 153 (50.2%)
+  Failed detection: 152 (49.8%)
+  Mean detection rate (successful): 0.914
+  Mean detection rate (failed): 0.072
+
+UNKNOWN:
+  Total videos: 493
+  Successful detection: 260 (52.7%)
+  Failed detection: 233 (47.3%)
+  Mean detection rate (successful): 0.918
+  Mean detection rate (failed): 0.130
+
+TOP 10 PERFORMING VIDEOS:
+==================================================
+ 1. doctor__useruser01__65plus__female__caucasian__20250723T042153.mp4
+    Class: doctor
+    Lip detection rate: 1.000
+    Good quality rate: 1.000
+    Total frames: 66
+
+ 2. i_need_to_move__useruser01__65plus__female__caucasian__20250827T060409.mp4
+    Class: unknown
+    Lip detection rate: 1.000
+    Good quality rate: 1.000
+    Total frames: 119
+
+ 3. help__useruser01__18to39__male__caucasian__20250910T194945.mp4
+    Class: help
+    Lip detection rate: 1.000
+    Good quality rate: 1.000
+    Total frames: 58
+
+ 4. pillow__useruser01__65plus__female__caucasian__20250822T052844.mp4
+    Class: pillow
+    Lip detection rate: 1.000
+    Good quality rate: 1.000
+    Total frames: 92
+
+ 5. glasses__useruser01__40to64__female__caucasian__20250830T112450.mp4
+    Class: glasses
+    Lip detection rate: 1.000
+    Good quality rate: 1.000
+    Total frames: 32
+
+ 6. doctor__useruser01__18to39__male__not_specified__20250824T030802.mp4
+    Class: doctor
+    Lip detection rate: 1.000
+    Good quality rate: 1.000
+    Total frames: 79
+
+ 7. phone__useruser01__40to64__female__caucasian__20250830T112905.mp4
+    Class: phone
+    Lip detection rate: 1.000
+    Good quality rate: 1.000
+    Total frames: 41
+
+ 8. doctor__useruser01__65plus__female__caucasian__20250723T063412.mp4
+    Class: doctor
+    Lip detection rate: 1.000
+    Good quality rate: 0.062
+    Total frames: 146
+
+ 9. doctor__useruser01__65plus__female__caucasian__20250827T060654.mp4
+    Class: doctor
+    Lip detection rate: 1.000
+    Good quality rate: 1.000
+    Total frames: 128
+
+10. my_mouth_is_dry__useruser01__65plus__female__caucasian__20250827T060155.mp4
+    Class: unknown
+    Lip detection rate: 1.000
+    Good quality rate: 1.000
+    Total frames: 150
+

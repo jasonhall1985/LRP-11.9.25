@@ -1,0 +1,220 @@
+augmentation:
+  affine_deg: 2.0
+  affine_px: 4
+  aug_prob: 0.3
+  brightness: 0.1
+  contrast: 0.1
+  elastic_transform: false
+  enabled: true
+  hflip: false
+  temporal_dropout: 0.0
+  temporal_jitter: 0.1
+  vflip: false
+balance:
+  auto_switch: true
+  duplicate_cap: 0.9
+  method: weighted_sampler
+  switch_patience: 2
+checkpointing:
+  metric: val_macro_f1
+  mode: max
+  save_best: true
+  save_frequency: 5
+  save_last: true
+  save_optimizer: true
+  save_scaler: true
+  save_scheduler: true
+classes:
+  names:
+  - help
+  - doctor
+  - glasses
+  - phone
+  - pillow
+  - i_need_to_move
+  - my_mouth_is_dry
+  variations:
+    doctor:
+    - doctor
+    - DOCTOR
+    - Doctor
+    glasses:
+    - glasses
+    - GLASSES
+    - Glasses
+    help:
+    - help
+    - HELP
+    - Help
+    i_need_to_move:
+    - i_need_to_move
+    - I_NEED_TO_MOVE
+    - i need to move
+    - I NEED TO MOVE
+    my_mouth_is_dry:
+    - my_mouth_is_dry
+    - MY_MOUTH_IS_DRY
+    - my mouth is dry
+    - MY MOUTH IS DRY
+    phone:
+    - phone
+    - PHONE
+    - Phone
+    pillow:
+    - pillow
+    - PILLOW
+    - Pillow
+data:
+  clahe_clip_limit: 2.0
+  clahe_enabled: true
+  clahe_tile_grid:
+  - 8
+  - 8
+  clip_len: 32
+  clip_len_max: 40
+  grayscale_mode: average_weights
+  img_size: 132
+  mean:
+  - 0.5
+  normalize_range:
+  - 0
+  - 1
+  padding_mode: loop
+  resize_for_backbone: 112
+  std:
+  - 0.5
+  temporal_sampling: uniform
+ema:
+  beta: 0.999
+  enabled: true
+  update_after_step: true
+  validate_with_ema: true
+hardware:
+  device: auto
+  empty_cache_frequency: 100
+  gpu_id: 0
+  memory_fraction: 0.9
+  num_workers: 0
+  persistent_workers: false
+  pin_memory: false
+  prefetch_factor: null
+logging:
+  level: INFO
+  log_frequency: 10
+  tensorboard:
+    enabled: true
+    log_graph: true
+    log_images: false
+  wandb:
+    enabled: false
+    entity: null
+    project: lip_reading_7class
+    tags:
+    - r2plus1d
+    - 7class
+    - production
+loss:
+  focal_alpha: null
+  focal_gamma: 2.0
+  label_smoothing: 0.05
+  name: cross_entropy
+model:
+  backbone: r2plus1d_18
+  dropout: 0.3
+  freeze_backbone: true
+  freeze_epochs: 3
+  num_classes: 7
+  pretrained_weights: R2Plus1D_18_Weights.KINETICS400_V1
+  unfreeze_layers:
+  - layer3
+  - layer4
+optimizer:
+  amsgrad: false
+  backbone_lr: 2.0e-05
+  betas:
+  - 0.9
+  - 0.999
+  eps: 1.0e-08
+  head_lr: 0.0002
+  name: adamw
+  weight_decay: 0.01
+paths:
+  manifest_file: clean_balanced_manifest.csv
+  output_dir: ./experiments
+  processed_dir: fixed_temporal_output/full_processed
+  test_sources:
+  - /Users/client/Desktop/test set
+  training_sources:
+  - /Users/client/Desktop/LRP classifier 11.9.25/data/videos for training 14.9.25
+    not cropped completely /13.9.25top7dataset_cropped
+  - /Users/client/Desktop/training set 2.9.25
+  validation_sources:
+  - /Users/client/Desktop/VAL set
+reproducibility:
+  benchmark: false
+  deterministic: true
+  seed: 42
+scheduler:
+  T_0: 10
+  T_mult: 2
+  eta_min: 1.0e-06
+  name: cosine_with_restarts
+  unfreeze_schedule:
+  - epoch: 3
+    layers:
+    - layer4
+  - epoch: 6
+    layers:
+    - layer3
+    - layer4
+  - epoch: 10
+    layers:
+    - layer2
+    - layer3
+    - layer4
+  - epoch: 15
+    layers: all
+  warmup_epochs: 1
+splits:
+  min_test_pct: 10
+  min_val_pct: 10
+  stratify_by:
+  - class
+  - gender
+  - age_band
+  test_holdout: gender=female,age_band=18-39
+  val_holdout: age_band=40-64
+targets:
+  accuracy: 0.8
+  early_stop_bonus: 0.85
+  macro_f1: 0.75
+  min_per_class_f1: 0.6
+training:
+  auto_batch_size: true
+  batch_size: 16
+  early_stop_metric: val_macro_f1
+  early_stop_patience: 6
+  epochs: 100
+  grad_accumulation_steps: 1
+  grad_clip: 1.0
+  grad_scaler: true
+  max_batch_size: 32
+  min_batch_size: 4
+  min_delta: 0.001
+  mixed_precision: true
+tta:
+  enabled: false
+  num_crops: 3
+  test_only: true
+validation:
+  bootstrap_samples: 1000
+  confidence_interval: 0.95
+  frequency: 1
+  metrics:
+  - accuracy
+  - macro_f1
+  - weighted_f1
+  - per_class_f1
+  - confusion_matrix
+  - roc_auc
+  significance_test: true
