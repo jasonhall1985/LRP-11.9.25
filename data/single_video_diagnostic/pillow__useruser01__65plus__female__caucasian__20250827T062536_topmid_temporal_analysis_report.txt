@@ -1,0 +1,43 @@
+================================================================================
+SINGLE VIDEO TEMPORAL DIAGNOSTIC REPORT
+================================================================================
+Video: pillow__useruser01__65plus__female__caucasian__20250827T062536_topmid.mp4
+Test Date: 2025-09-17 23:52:39
+
+ORIGINAL VIDEO METRICS:
+  Frame Count: 105 frames
+  Duration: 3.533 seconds
+  Frame Rate: 29.72 fps
+  Total Frames (property): 105
+
+TEMPORAL TRANSFORMATION ANALYSIS:
+  Output Frame Count: 32 frames (fixed)
+  Compression Ratio: 2.760x
+  Frame Skip Interval: 3.28
+  Target Output Duration (25fps): 1.280s
+  Recommended Dynamic FPS: 9.1 fps
+
+CENTERING ACCURACY VALIDATION:
+  Frames Checked: 32
+  Perfect Centering Count: 0
+  Mean Deviation: 6.820 pixels
+  Max Deviation: 8.628 pixels
+  Quality Passed (>90% frames): False
+  Within 10% Threshold: False
+
+PROCESSING STATISTICS:
+  Method Used: ['ultra_precise_mathematical']
+  Processing Success: True
+
+TEMPORAL SAMPLING ASSESSMENT:
+  ⚠️  HIGH COMPRESSION: 2.76x may cause temporal artifacts
+  ⚠️  LOW DYNAMIC FPS: 9.1 fps may appear slow
+
+QUALITY CONTROL ASSESSMENT:
+  ❌ CENTERING QUALITY: FAILED - Requires quality review
+
+RECOMMENDATIONS:
+  • Consider preserving more original frames for long videos
+  • Video should be moved to quality review folder
+
+================================================================================

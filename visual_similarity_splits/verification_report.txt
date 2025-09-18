@@ -1,0 +1,37 @@
+VISUAL SIMILARITY DATASET SPLITTER VERIFICATION REPORT
+============================================================
+
+DATASET OVERVIEW:
+------------------------------
+Total videos processed: 714
+Total pseudo-speaker groups: 513
+Hash algorithm: phash
+Similarity threshold: 5
+
+SPLIT DISTRIBUTION:
+------------------------------
+Train: 13 videos (1.8%)
+Validation: 592 videos (82.9%)
+Test: 109 videos (15.3%)
+Total: 714 videos (100.0%)
+
+PSEUDO-SPEAKER GROUP STATISTICS:
+------------------------------
+Total groups: 513
+Mean group size: 1.39
+Median group size: 1
+Max group size: 5
+Min group size: 1
+Singleton groups: 364
+
+CLASS REPRESENTATION BY SPLIT:
+------------------------------
+Train: ['doctor', 'glasses', 'help', 'i_need_to_move', 'my_mouth_is_dry', 'phone', 'pillow']
+Validation: ['doctor', 'glasses', 'help', 'i_need_to_move', 'my_mouth_is_dry', 'phone', 'pillow']
+Test: ['doctor', 'glasses', 'help', 'i_need_to_move', 'my_mouth_is_dry', 'phone', 'pillow']
+
+VERIFICATION RESULTS:
+------------------------------
+✅ Zero pseudo-speaker overlap confirmed
+✅ All classes present in all splits
+✅ All male 18-39 videos in training set

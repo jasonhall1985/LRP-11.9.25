@@ -1,0 +1,36 @@
+STRICT DEMOGRAPHIC GROUP ASSIGNMENTS
+==================================================
+
+ZERO OVERLAP GUARANTEE: Each demographic group assigned to ONE split only
+
+TRAIN SPLIT DEMOGRAPHICS:
+----------------------------------------
+female_65+_caucasian                |  295 videos
+male_18-39_not                      |   67 videos
+female_18-39_caucasian              |   59 videos
+male_18-39_caucasian                |   50 videos
+female_18-39_asian                  |   21 videos
+male_65+_caucasian                  |   18 videos
+female_65+_asian                    |   16 videos
+male_65+_not                        |   14 videos
+male_18-39_asian                    |    1 videos
+female_18-39_aboriginal             |    1 videos
+female_18-39_not                    |    1 videos
+----------------------------------------
+TOTAL                               |  543 videos
+
+VALIDATION SPLIT DEMOGRAPHICS:
+----------------------------------------
+female_40-64_caucasian              |   44 videos
+female_40-64_aboriginal             |    9 videos
+male_40-64_asian                    |    2 videos
+male_40-64_caucasian                |    2 videos
+----------------------------------------
+TOTAL                               |   57 videos
+
+TEST SPLIT DEMOGRAPHICS:
+----------------------------------------
+unknown_unknown_unknown             |  114 videos
+----------------------------------------
+TOTAL                               |  114 videos
+

@@ -1,0 +1,44 @@
+BALANCED LIP-READING DATASET STATISTICS
+==================================================
+
+Total Videos: 714
+
+SPLIT DISTRIBUTION:
+------------------------------
+TRAIN        |  495 videos ( 69.3%)
+VALIDATION   |  158 videos ( 22.1%)
+TEST         |   61 videos (  8.5%)
+
+CLASS DISTRIBUTION:
+------------------------------
+doctor               | 102 videos
+glasses              | 102 videos
+help                 | 102 videos
+i_need_to_move       | 102 videos
+my_mouth_is_dry      | 102 videos
+phone                | 102 videos
+pillow               | 102 videos
+
+VIDEO TYPE DISTRIBUTION:
+------------------------------
+ORIGINAL     |  531 videos
+AUGMENTED    |  183 videos
+
+DEMOGRAPHIC DISTRIBUTION:
+----------------------------------------
+female_18-39_aboriginal        |    1 videos
+female_18-39_asian             |   21 videos
+female_18-39_caucasian         |   59 videos
+female_18-39_not               |    1 videos
+female_40-64_aboriginal        |    9 videos
+female_40-64_caucasian         |   44 videos
+female_65+_asian               |   16 videos
+female_65+_caucasian           |  295 videos
+male_18-39_asian               |    1 videos
+male_18-39_caucasian           |   50 videos
+male_18-39_not                 |   67 videos
+male_40-64_asian               |    2 videos
+male_40-64_caucasian           |    2 videos
+male_65+_caucasian             |   18 videos
+male_65+_not                   |   14 videos
+unknown_unknown_unknown        |  114 videos
