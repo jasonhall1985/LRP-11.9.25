@@ -1,0 +1,23 @@
+4-CLASS CROSS-DEMOGRAPHIC TRAINING REPORT
+================================================================================
+
+PRIMARY GOAL: >70.0% cross-demographic validation accuracy
+CLASSES: my_mouth_is_dry, i_need_to_move, doctor, pillow
+SUCCESS: YES
+
+FINAL RESULTS:
+Best validation accuracy: 72.4%
+Validation stability: 8.45%
+Training time: 938.8s
+Total epochs: 21
+
+PER-CLASS PERFORMANCE (Best Epoch):
+my_mouth_is_dry: 100.0%
+i_need_to_move: 87.5%
+doctor: 40.0%
+pillow: 85.7%
+
+SCALING ANALYSIS:
+Binary baseline: 62.5%
+4-Class performance: 72.4%
+Scaling factor: 1.159

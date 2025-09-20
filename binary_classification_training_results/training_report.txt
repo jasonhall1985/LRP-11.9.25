@@ -1,0 +1,32 @@
+BINARY CROSS-DEMOGRAPHIC TRAINING REPORT
+================================================================================
+
+CONFIGURATION:
+----------------------------------------
+Classes: help vs doctor (2 classes)
+Training demographic: 65+ female Caucasian
+Validation demographic: 18-39 male not_specified
+Training videos: 48
+Validation videos: 8
+Batch size: 8
+Max epochs: 30
+Training time: 171.7s
+
+FINAL RESULTS:
+----------------------------------------
+Final training accuracy: 54.17%
+Final validation accuracy: 50.00%
+Best validation accuracy: 62.50%
+Total epochs: 21
+
+SUCCESS CRITERIA EVALUATION:
+----------------------------------------
+Training accuracy ≥ 90.0%: ❌ FAIL (54.17%)
+Cross-demographic validation ≥ 70.0%: ❌ FAIL (50.00%)
+Overall success: ❌ FAIL
+
+NEXT STEPS:
+----------------------------------------
+❌ Pipeline validation failed - debug issues before 7-class training
+   - Training accuracy insufficient - check model architecture/learning rate
+   - Cross-demographic generalization poor - consider data augmentation

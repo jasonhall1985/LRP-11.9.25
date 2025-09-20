@@ -1,0 +1,23 @@
+ENHANCED BINARY CROSS-DEMOGRAPHIC TRAINING REPORT
+================================================================================
+
+PRIMARY GOAL: >80.0% cross-demographic validation accuracy
+SUCCESS: NO
+
+FINAL RESULTS:
+Best validation accuracy: 62.5%
+Validation stability: 6.12%
+Training time: 270.2s
+Total epochs: 28
+
+VALIDATION HISTORY:
+Epoch 19: 62.5% (CI: 25.0-100.0%)
+Epoch 20: 37.5% (CI: 12.5-75.0%)
+Epoch 21: 50.0% (CI: 12.5-87.5%)
+Epoch 22: 50.0% (CI: 12.5-87.5%)
+Epoch 23: 37.5% (CI: 0.0-75.0%)
+Epoch 24: 37.5% (CI: 12.5-75.0%)
+Epoch 25: 50.0% (CI: 12.5-87.5%)
+Epoch 26: 37.5% (CI: 12.5-75.0%)
+Epoch 27: 50.0% (CI: 12.5-87.5%)
+Epoch 28: 50.0% (CI: 12.5-87.5%)

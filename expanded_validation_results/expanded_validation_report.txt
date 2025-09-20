@@ -1,0 +1,15 @@
+EXPANDED VALIDATION CROSS-DEMOGRAPHIC TRAINING REPORT
+================================================================================
+
+PRIMARY GOAL: >75.0% multi-demographic validation accuracy
+VALIDATION SET: 8 videos (3x expansion)
+SUCCESS: NO
+
+FINAL RESULTS:
+Best validation accuracy: 62.5%
+Demographic consistency: 1.000
+Training time: 292.4s
+Total epochs: 31
+
+DEMOGRAPHIC PERFORMANCE:
+18to39_male_not_specified: 62.5%
