@@ -1,0 +1,25 @@
+DOCTOR-FOCUSED 4-CLASS TRAINING REPORT
+================================================================================
+
+DOCTOR CLASS IMPROVEMENT:
+Baseline: 40.0%
+Best achieved: 50.0%
+Improvement: +10.0 percentage points
+Target met: NO
+
+OVERALL PERFORMANCE:
+Best validation: 75.9%
+Change from baseline: +3.5%
+Target maintained: YES
+
+PER-CLASS RESULTS (Best Epoch):
+my_mouth_is_dry: 100.0% (+0.0%)
+i_need_to_move: 87.5% (+0.0%)
+doctor: 50.0% (+10.0%)
+pillow: 85.7% (+0.0%)
+
+TRAINING SUMMARY:
+Training time: 668.3s
+Total epochs: 13
+Best epoch: 5
+Success: PARTIAL
