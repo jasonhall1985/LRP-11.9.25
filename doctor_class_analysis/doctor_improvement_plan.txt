@@ -1,0 +1,19 @@
+DOCTOR CLASS IMPROVEMENT PLAN
+==================================================
+
+CURRENT STATE:
+Doctor accuracy: 40.0%
+Target accuracy: 60.0%
+Performance gap: 20.0%
+
+ROOT CAUSES IDENTIFIED:
+- insufficient_training_data: YES
+- demographic_mismatch: NO
+- class_imbalance: NO
+- visual_confusion: YES
+
+IMPROVEMENT STRATEGIES:
+1. Class-weighted loss with 2x doctor emphasis
+2. Enhanced augmentation (5x multiplier, ±20% brightness)
+3. Targeted 20-epoch retraining with early stopping
+4. Focus on doctor-pillow visual distinction
