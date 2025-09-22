@@ -1,0 +1,46 @@
+# Balanced 61-Video-Per-Class Model Evaluation Report
+Generated: 2025-09-22 18:49:39
+
+## Model Information
+- Architecture: CNN-LSTM
+- Training Data: 196 videos (49 per class)
+- Validation Data: 48 videos (12 per class)
+- Perfect Class Balance: ✅
+
+## Performance Metrics
+Overall Accuracy: 0.375
+Macro Avg F1: 0.292
+Weighted Avg F1: 0.292
+
+## Per-Class Performance
+doctor:
+  Precision: 0.500
+  Recall: 0.167
+  F1-Score: 0.250
+  Support: 12.0
+
+i_need_to_move:
+  Precision: 0.344
+  Recall: 0.917
+  F1-Score: 0.500
+  Support: 12.0
+
+my_mouth_is_dry:
+  Precision: 0.000
+  Recall: 0.000
+  F1-Score: 0.000
+  Support: 12.0
+
+pillow:
+  Precision: 0.417
+  Recall: 0.417
+  F1-Score: 0.417
+  Support: 12.0
+
+## Confusion Matrix
+Rows = Actual, Columns = Predicted
+Classes: doctor, i_need_to_move, my_mouth_is_dry, pillow
+doctor: 2 10 0 0
+i_need_to_move: 0 11 0 1
+my_mouth_is_dry: 2 4 0 6
+pillow: 0 7 0 5

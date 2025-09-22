@@ -1,0 +1,38 @@
+# Balanced 85-Per-Class Dataset Composition Report
+# Generated: 2025-09-22 21:48:15
+
+## Dataset Summary
+- Total videos: 340
+- Training videos: 272
+- Validation videos: 68
+- Videos per class: 85
+- Classes: doctor, i_need_to_move, my_mouth_is_dry, pillow
+
+## Training Set Composition
+- doctor: 68 videos
+- i_need_to_move: 68 videos
+- my_mouth_is_dry: 68 videos
+- pillow: 68 videos
+
+## Validation Set Composition
+- doctor: 17 videos
+- i_need_to_move: 17 videos
+- my_mouth_is_dry: 17 videos
+- pillow: 17 videos
+
+## Cross-Demographic Validation Coverage
+- Total demographic groups in validation: 14
+- 65plus_female_caucasian: 23 videos
+- 18to39_male_not: 7 videos
+- 65plus_male_caucasian: 7 videos
+- unknown: 6 videos
+- 18to39_female_caucasian: 6 videos
+- 40to64_female_caucasian: 4 videos
+- 18to39_male_caucasian: 3 videos
+- 65plus_female_asian: 3 videos
+- 40to64_female_aboriginal: 2 videos
+- 40to64_male_caucasian: 2 videos
+- 18to39_female_asian: 2 videos
+- 18to39_male_asian: 1 videos
+- 65plus_male_not: 1 videos
+- 18to39_female_not: 1 videos

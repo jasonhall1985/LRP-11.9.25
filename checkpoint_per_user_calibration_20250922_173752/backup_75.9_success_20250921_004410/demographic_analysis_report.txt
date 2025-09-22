@@ -1,0 +1,131 @@
+COMPREHENSIVE DEMOGRAPHIC ANALYSIS REPORT
+================================================================================
+
+ORIGINAL VIDEO DISTRIBUTION:
+----------------------------------------
+Total videos found: 714
+Valid videos: 600
+Rejected videos: 114
+
+DEMOGRAPHIC GROUP STATISTICS:
+----------------------------------------
+18to39_female_aboriginal: 1 videos
+  - help: 1
+
+18to39_female_asian: 21 videos
+  - glasses: 1
+  - help: 4
+  - i_need_to_move: 9
+  - my_mouth_is_dry: 1
+  - phone: 2
+  - pillow: 4
+
+18to39_female_caucasian: 59 videos
+  - doctor: 10
+  - glasses: 7
+  - help: 11
+  - i_need_to_move: 8
+  - my_mouth_is_dry: 4
+  - phone: 12
+  - pillow: 7
+
+18to39_female_not_specified: 1 videos
+  - my_mouth_is_dry: 1
+
+18to39_male_asian: 1 videos
+  - doctor: 1
+
+18to39_male_caucasian: 50 videos
+  - doctor: 3
+  - glasses: 7
+  - help: 6
+  - i_need_to_move: 16
+  - my_mouth_is_dry: 4
+  - phone: 4
+  - pillow: 10
+
+18to39_male_not_specified: 67 videos
+  - doctor: 25
+  - glasses: 8
+  - help: 10
+  - i_need_to_move: 5
+  - my_mouth_is_dry: 8
+  - phone: 7
+  - pillow: 4
+
+40to64_female_aboriginal: 9 videos
+  - doctor: 4
+  - glasses: 1
+  - help: 2
+  - pillow: 2
+
+40to64_female_caucasian: 44 videos
+  - doctor: 7
+  - glasses: 6
+  - help: 10
+  - i_need_to_move: 5
+  - my_mouth_is_dry: 5
+  - phone: 6
+  - pillow: 5
+
+40to64_male_asian: 2 videos
+  - phone: 2
+
+40to64_male_caucasian: 2 videos
+  - i_need_to_move: 1
+  - my_mouth_is_dry: 1
+
+65plus_female_asian: 16 videos
+  - doctor: 4
+  - glasses: 2
+  - help: 6
+  - i_need_to_move: 2
+  - pillow: 2
+
+65plus_female_caucasian: 295 videos
+  - doctor: 26
+  - glasses: 40
+  - help: 24
+  - i_need_to_move: 50
+  - my_mouth_is_dry: 73
+  - phone: 42
+  - pillow: 40
+
+65plus_male_caucasian: 18 videos
+  - glasses: 4
+  - help: 2
+  - i_need_to_move: 1
+  - my_mouth_is_dry: 5
+  - phone: 1
+  - pillow: 5
+
+65plus_male_not_specified: 14 videos
+  - doctor: 1
+  - glasses: 3
+  - i_need_to_move: 5
+  - phone: 2
+  - pillow: 3
+
+SELECTED DEMOGRAPHICS FOR CROSS-DEMOGRAPHIC TESTING:
+----------------------------------------
+Training (Largest): 65plus_female_caucasian
+Validation (Second): 18to39_male_not_specified
+
+FINAL BALANCED DATASET:
+----------------------------------------
+Training videos: 168
+Validation videos: 28
+Total: 196
+
+CROSS-DEMOGRAPHIC GENERALIZATION SETUP:
+----------------------------------------
+✅ Zero demographic overlap between training and validation
+✅ Perfect class balance within each demographic group
+✅ Binary classification subsets created for rapid testing
+✅ Brightness-only augmentation preserves lip-reading quality
+
+SUCCESS CRITERIA:
+----------------------------------------
+- Training Performance: >90% accuracy within 20 epochs
+- Cross-Demographic Validation: >70% accuracy
+- Clear learning progression without demographic memorization

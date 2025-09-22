@@ -1,0 +1,16 @@
+# Balanced 102-Per-Class Dataset Exclusions
+# Generated: 2025-09-22 19:17:56
+# Total excluded videos: 10
+
+## PILLOW (10 excluded)
+  - pillow__useruser01__65plus__female__caucasian__20250827T055328_topmid_96x64_processed.mp4
+  - pillow 6_processed.mp4
+  - pillow__useruser01__65plus__female__caucasian__20250731T053853_topmid_96x64_processed.mp4
+  - pillow 2_processed.mp4
+  - pillow__useruser01__18to39__male__caucasian__20250904T083736_topmid_96x64_processed.mp4
+  - pillow__useruser01__65plus__female__caucasian__20250827T062551_topmid_96x64_processed.mp4
+  - pillow 7_processed.mp4
+  - pillow__useruser01__65plus__female__caucasian__20250922T182938_04_topmid_96x64_processed.mp4
+  - pillow__useruser01__65plus__female__caucasian__20250827T060422_topmid_96x64_processed.mp4
+  - pillow__useruser01__18to39__female__caucasian__20250822T083718_topmid_96x64_processed.mp4
+

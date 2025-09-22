@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lip Reading - File Upload Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .upload-area {
+            background: rgba(255,255,255,0.1);
+            border: 3px dashed rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .upload-area:hover {
+            border-color: #00ff88;
+            background: rgba(0,255,136,0.1);
+        }
+
+        .upload-area.dragover {
+            border-color: #00ff88;
+            background: rgba(0,255,136,0.2);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .video-preview {
+            margin: 20px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.3);
+            display: none;
+        }
+
+        #previewVideo {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+        }
+
+        button {
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0,255,136,0.3);
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,255,136,0.4);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .prediction-result {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .prediction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .confidence-bar {
+            width: 120px;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-left: 15px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00cc6a);
+            transition: width 0.3s ease;
+        }
+
+        .error {
+            color: #ff6b6b;
+            background: rgba(255,107,107,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: left;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #00ff88;
+            text-align: center;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            list-style-position: inside;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #00ff88;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Lip Reading Demo</h1>
+        <p style="margin-bottom: 20px; opacity: 0.9;">Upload a video file to test the balanced AI model</p>
+        
+        <div class="instructions">
+            <h3>📱 How to Use:</h3>
+            <ol>
+                <li>Record a video saying one of: <strong>"pillow", "doctor", "my mouth is dry", "I need to move"</strong></li>
+                <li>Keep the video 2-5 seconds long</li>
+                <li>Make sure your lips are clearly visible</li>
+                <li>Click the upload area below or drag & drop your video</li>
+                <li>Wait for the AI prediction results!</li>
+            </ol>
+        </div>
+
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📹</div>
+            <div class="upload-text">Click to Upload Video</div>
+            <div class="upload-subtext">or drag and drop a video file here</div>
+            <div class="upload-subtext" style="margin-top: 10px;">Supports: MP4, MOV, WEBM, AVI</div>
+        </div>
+
+        <input type="file" id="fileInput" accept="video/*" onchange="handleFileSelect(event)">
+
+        <div class="video-preview" id="videoPreview">
+            <video id="previewVideo" controls></video>
+        </div>
+
+        <button id="predictBtn" onclick="predictVideo()" disabled>🧠 Analyze Video</button>
+
+        <div id="status" class="status">
+            Ready to upload video file
+        </div>
+
+        <div id="predictionResult" class="prediction-result">
+            <h3>🎯 Prediction Results:</h3>
+            <div id="predictions"></div>
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://192.168.1.100:5000';
+        let selectedFile = null;
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.querySelector('.upload-area');
+        const videoPreview = document.getElementById('videoPreview');
+        const previewVideo = document.getElementById('previewVideo');
+        const predictBtn = document.getElementById('predictBtn');
+        const status = document.getElementById('status');
+        const predictionResult = document.getElementById('predictionResult');
+        const predictions = document.getElementById('predictions');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            // Validate file type
+            if (!file.type.startsWith('video/')) {
+                showError('Please select a video file');
+                return;
+            }
+
+            // Validate file size (max 50MB)
+            if (file.size > 50 * 1024 * 1024) {
+                showError('File too large. Please select a video under 50MB');
+                return;
+            }
+
+            selectedFile = file;
+            
+            // Show video preview
+            const url = URL.createObjectURL(file);
+            previewVideo.src = url;
+            videoPreview.style.display = 'block';
+            
+            predictBtn.disabled = false;
+            updateStatus(`Video loaded: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+            
+            // Hide previous results
+            predictionResult.style.display = 'none';
+            hideError();
+        }
+
+        async function predictVideo() {
+            if (!selectedFile) {
+                showError('Please select a video file first');
+                return;
+            }
+
+            try {
+                predictBtn.disabled = true;
+                updateStatus('Uploading video... <span class="loading"></span>');
+
+                const formData = new FormData();
+                formData.append('video', selectedFile);
+
+                const response = await fetch(`${API_URL}/predict`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+                }
+
+                updateStatus('Processing with AI model... <span class="loading"></span>');
+
+                const result = await response.json();
+                displayPredictions(result);
+                updateStatus('✅ Analysis complete!');
+
+            } catch (error) {
+                console.error('Prediction error:', error);
+                showError(`Failed to analyze video: ${error.message}`);
+                updateStatus('❌ Analysis failed');
+            } finally {
+                predictBtn.disabled = false;
+            }
+        }
+
+        function displayPredictions(result) {
+            const predictionList = result.predictions || result.top2 || [];
+            
+            predictions.innerHTML = '';
+            
+            if (predictionList.length === 0) {
+                predictions.innerHTML = '<p>No predictions received</p>';
+                predictionResult.style.display = 'block';
+                return;
+            }
+            
+            predictionList.forEach((pred, index) => {
+                const confidence = pred.confidence > 1 ? pred.confidence / 100 : pred.confidence;
+                const percentage = Math.round(confidence * 100);
+                
+                const predItem = document.createElement('div');
+                predItem.className = 'prediction-item';
+                
+                predItem.innerHTML = `
+                    <span><strong>${index + 1}. ${pred.class}</strong></span>
+                    <div style="display: flex; align-items: center;">
+                        <span style="margin-right: 10px;">${percentage}%</span>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                predictions.appendChild(predItem);
+            });
+            
+            predictionResult.style.display = 'block';
+        }
+
+        function showError(message) {
+            errorMessage.innerHTML = message;
+            errorMessage.style.display = 'block';
+            setTimeout(hideError, 8000);
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        function updateStatus(message) {
+            status.innerHTML = message;
+        }
+
+        // Test server connection on load
+        fetch(`${API_URL}/health`)
+            .then(response => response.json())
+            .then(data => {
+                updateStatus('✅ Connected to AI server - Ready to upload video');
+            })
+            .catch(error => {
+                showError('⚠️ Cannot connect to AI server. Make sure the backend is running.');
+                updateStatus('❌ Server connection failed');
+            });
+    </script>
+</body>
+</html>

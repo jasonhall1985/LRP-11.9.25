@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Lip-Reading AI Demo - Web Version</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-good { color: #4ade80; }
+        .status-warning { color: #fbbf24; }
+        .camera-container {
+            position: relative;
+            margin: 20px auto;
+            width: 480px;  /* Portrait oval dimensions */
+            height: 640px;
+            border-radius: 50%;  /* Make it oval */
+            overflow: hidden;  /* Clips video to oval shape */
+            border: 3px solid #374151;
+            background: #000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            /* Ensure proper video containment */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Responsive design for smaller screens */
+        @media (max-width: 600px) {
+            .camera-container {
+                width: 360px;
+                height: 480px;
+            }
+            .lip-guide {
+                width: 144px;  /* 96*1.5 for smaller screens */
+                height: 96px;  /* 64*1.5 for smaller screens */
+            }
+        }
+        #videoElement {
+            width: 100%;  /* Base size, zoom controlled by slider */
+            height: 100%;
+            object-fit: cover;
+            transform: translate(-50%, -50%) scale(1.0); /* Default 1x zoom */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transition: transform 0.3s ease; /* Smooth zoom transitions */
+        }
+        /* Privacy mask - solid black overlay for top half */
+        .privacy-mask {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;  /* Cover top half (eyes/forehead) */
+            background: #000000;  /* Solid black, completely opaque */
+            z-index: 15;
+            pointer-events: none;
+            border-bottom: 2px solid rgba(16, 185, 129, 0.3);  /* Subtle green border */
+        }
+
+        /* Privacy notice */
+        .privacy-notice {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 25;
+            pointer-events: none;
+        }
+
+        /* Zoom controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 20px;
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .zoom-slider {
+            width: 120px;
+            height: 4px;
+            background: #374151;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .zoom-label {
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        /* Lip guide positioned in bottom half */
+        .lip-guide {
+            position: absolute;
+            top: 65%;  /* Position in lower portion of visible area */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 192px;  /* 96*2 for visibility */
+            height: 128px; /* 64*2 for visibility */
+            border: 2px dashed #fbbf24;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 20;
+            transition: border-color 0.3s ease;
+        }
+        .lip-guide.aligned {
+            border-color: #22c55e;
+        }
+        .lip-guide-label {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(251, 191, 36, 0.95);
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-record {
+            background: #ef4444;
+        }
+        .btn-record:hover {
+            background: #dc2626;
+        }
+        .btn-record.recording {
+            background: #991b1b;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .countdown {
+            position: absolute;
+            top: 75%;  /* Position in visible bottom area */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 72px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: none;
+        }
+        .prediction {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .confidence-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .confidence-high { background: #22c55e; }
+        .confidence-medium { background: #f59e0b; }
+        .confidence-low { background: #ef4444; }
+        .instructions {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+        .classes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .class-item {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .processing {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Lip-Reading AI Demo</h1>
+            <h2>Web Version - 75.9% Validation Accuracy Model</h2>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span>🤖 Model:</span>
+                <span id="modelStatus" class="status-good">75.9% Accuracy (2.98M params)</span>
+            </div>
+            <div class="status-item">
+                <span>🌐 Backend:</span>
+                <span id="backendStatus" class="status-warning">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span>📹 Camera:</span>
+                <span id="cameraStatus" class="status-warning">Requesting...</span>
+            </div>
+            <div class="status-item">
+                <span>🎬 Frames:</span>
+                <span id="framesStatus" class="status-warning">0</span>
+            </div>
+        </div>
+
+        <div class="camera-container">
+            <video id="videoElement" autoplay muted playsinline></video>
+
+            <!-- Privacy mask - solid black overlay for top half -->
+            <div class="privacy-mask"></div>
+
+            <!-- Privacy notice -->
+            <div class="privacy-notice">🔒 Eyes Protected</div>
+
+            <!-- Zoom controls -->
+            <div class="zoom-controls">
+                <span class="zoom-label">🔍 Zoom:</span>
+                <input type="range" id="zoomSlider" class="zoom-slider" min="1.0" max="3.0" step="0.1" value="1.2">
+                <span id="zoomValue" class="zoom-label">1.2x</span>
+            </div>
+
+            <!-- Lip guide positioned in bottom half -->
+            <div class="lip-guide" id="lipGuide">
+                <div class="lip-guide-label">Align lips here (96×64)</div>
+            </div>
+
+            <div id="countdown" class="countdown" style="display: none;"></div>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn" class="btn btn-record" disabled>Start Camera</button>
+            <button id="recordBtn" class="btn btn-record" disabled>Record (3s)</button>
+            <button id="testBtn" class="btn">Test Backend</button>
+        </div>
+
+        <div id="processing" class="processing">
+            <div class="spinner"></div>
+            <p>Processing lip movement with 75.9% accuracy model...</p>
+        </div>
+
+        <div id="results" class="results">
+            <h3>🎯 AI Predictions</h3>
+            <div id="predictions"></div>
+            <button id="speakBtn" class="btn" style="display: none;">🔊 Speak Result</button>
+            <button id="tryAgainBtn" class="btn">Try Again</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Privacy-Compliant Lip Reading</h3>
+            <p><strong>🔒 Privacy Protection:</strong> The top half of the camera view is blacked out to protect your eyes and identity</p>
+            <p><strong>1. Click "Start Camera"</strong> and allow camera permissions</p>
+            <p><strong>2. Position your mouth</strong> in the dashed rectangle guide in the visible bottom area</p>
+            <p><strong>3. Click "Record"</strong> and say one of these phrases clearly:</p>
+            
+            <div class="classes">
+                <div class="class-item">"my mouth is dry"</div>
+                <div class="class-item">"I need to move"</div>
+                <div class="class-item">"doctor"</div>
+                <div class="class-item">"pillow"</div>
+            </div>
+            
+            <p><strong>4. Wait for AI processing</strong> - results show confidence levels</p>
+            <p><strong>5. Click "Speak Result"</strong> to hear the prediction</p>
+            
+            <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                <strong>💡 Tips for Best Results:</strong><br>
+                • Position mouth in the dashed rectangle guide<br>
+                • Good lighting on the lower face area<br>
+                • Speak clearly with exaggerated lip movements<br>
+                • Keep chin still, only move lips and jaw<br>
+                • "doctor" typically has highest accuracy (~80%)<br>
+                • 🔒 Your eyes remain completely private and protected
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://192.168.1.100:5000';  // Balanced 72.4% model - AUTHENTIC PREDICTIONS
+        let mediaRecorder;
+        let recordedChunks = [];
+        let stream;
+
+        // DOM elements
+        const videoElement = document.getElementById('videoElement');
+        const startBtn = document.getElementById('startBtn');
+        const recordBtn = document.getElementById('recordBtn');
+        const testBtn = document.getElementById('testBtn');
+        const countdown = document.getElementById('countdown');
+        const processing = document.getElementById('processing');
+        const zoomSlider = document.getElementById('zoomSlider');
+        const zoomValue = document.getElementById('zoomValue');
+        const results = document.getElementById('results');
+        const predictions = document.getElementById('predictions');
+        const speakBtn = document.getElementById('speakBtn');
+        const tryAgainBtn = document.getElementById('tryAgainBtn');
+        const backendStatus = document.getElementById('backendStatus');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const framesStatus = document.getElementById('framesStatus');
+        const lipGuide = document.getElementById('lipGuide');
+
+        // State tracking
+        let frameCount = 0;
+        let lastRequestTime = 0;
+
+        // Check backend status
+        async function checkBackend() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                if (data.status === 'healthy') {
+                    backendStatus.textContent = '✅ Connected';
+                    backendStatus.className = 'status-good';
+                    return true;
+                }
+            } catch (error) {
+                backendStatus.textContent = '❌ Offline';
+                backendStatus.className = 'status-warning';
+                console.error('Backend check failed:', error);
+            }
+            return false;
+        }
+
+        // Start camera
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },  /* Higher resolution for better zoom quality */
+                        height: { ideal: 720 },
+                        facingMode: 'user',
+                        frameRate: { ideal: 30 }
+                    },
+                    audio: true
+                });
+                videoElement.srcObject = stream;
+
+                // Initialize with moderate default zoom
+                videoElement.addEventListener('loadedmetadata', () => {
+                    const defaultZoom = 1.2;  // Moderate default zoom
+                    applyZoom(defaultZoom);
+                    console.log(`📹 Video initialized with ${defaultZoom}x zoom`);
+                });
+
+                cameraStatus.textContent = '✅ Active';
+                cameraStatus.className = 'status-good';
+                startBtn.style.display = 'none';
+                recordBtn.disabled = false;
+                return true;
+            } catch (error) {
+                cameraStatus.textContent = '❌ Failed';
+                cameraStatus.className = 'status-warning';
+                alert('Camera access denied. Please allow camera permissions and refresh.');
+                return false;
+            }
+        }
+
+        // Record video
+        async function recordVideo() {
+            recordedChunks = [];
+            
+            // Countdown
+            recordBtn.disabled = true;
+            for (let i = 3; i > 0; i--) {
+                countdown.textContent = i;
+                countdown.style.display = 'block';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            countdown.style.display = 'none';
+            
+            // Start recording
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+            
+            mediaRecorder.onstop = processVideo;
+            mediaRecorder.start();
+            
+            recordBtn.textContent = 'Recording...';
+            recordBtn.classList.add('recording');
+            
+            // Stop after 3 seconds
+            setTimeout(() => {
+                mediaRecorder.stop();
+                recordBtn.textContent = 'Record (3s)';
+                recordBtn.classList.remove('recording');
+            }, 3000);
+        }
+
+        // Process recorded video
+        async function processVideo() {
+            processing.style.display = 'block';
+            results.style.display = 'none';
+
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const formData = new FormData();
+            formData.append('video', blob, 'recording.webm');
+
+            console.log('📤 Uploading video:', blob.size, 'bytes');
+            lastRequestTime = Date.now();
+
+            try {
+                const response = await fetch(`${API_URL}/predict`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                const latency = Date.now() - lastRequestTime;
+
+                console.log('📥 Response received:', data);
+                console.log('⏱️ Latency:', latency, 'ms');
+
+                if (data.success) {
+                    displayResults(data, latency);
+                    frameCount++;
+                    framesStatus.textContent = frameCount;
+                    framesStatus.className = 'status-good';
+                } else {
+                    alert('Prediction failed: ' + (data.error || 'Unknown error'));
+                    showTroubleshootingTips();
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+                showTroubleshootingTips();
+            } finally {
+                processing.style.display = 'none';
+                recordBtn.disabled = false;
+            }
+        }
+
+        // Display results
+        function displayResults(data, latency) {
+            predictions.innerHTML = '';
+
+            // Handle both old format (top2) and new format (predictions)
+            const predictionList = data.predictions || data.top2 || [];
+            predictionList.forEach((pred, index) => {
+                const div = document.createElement('div');
+                div.className = 'prediction';
+
+                // Handle confidence - backend returns percentage (0-100), convert to decimal if needed
+                const confidence = pred.confidence > 1 ? pred.confidence / 100 : pred.confidence;
+                let badgeClass = 'confidence-low';
+                let badgeText = 'Low';
+
+                if (confidence >= 0.75) {
+                    badgeClass = 'confidence-high';
+                    badgeText = 'High';
+                } else if (confidence >= 0.50) {
+                    badgeClass = 'confidence-medium';
+                    badgeText = 'Medium';
+                }
+
+                div.innerHTML = `
+                    <div>
+                        <strong>${pred.class.replace(/_/g, ' ')}</strong>
+                        <div style="font-size: 14px; opacity: 0.8;">${(confidence * 100).toFixed(1)}% confidence</div>
+                    </div>
+                    <div class="confidence-badge ${badgeClass}">${badgeText}</div>
+                `;
+
+                predictions.appendChild(div);
+            });
+
+            // Add debug info
+            const debugDiv = document.createElement('div');
+            debugDiv.style.cssText = 'margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 12px;';
+            debugDiv.innerHTML = `
+                <strong>🔍 Debug Info:</strong><br>
+                Latency: ${latency}ms | Endpoint: /predict | Frames: ${frameCount}
+            `;
+            predictions.appendChild(debugDiv);
+
+            // Store top prediction for speech
+            const topPred = predictionList[0];
+            window.topPrediction = topPred ? topPred.class : 'unknown';
+
+            results.style.display = 'block';
+            speakBtn.style.display = 'inline-block';
+        }
+
+        // Zoom control functions
+        function applyZoom(zoomLevel) {
+            const verticalOffset = -20; // Slight upward adjustment for face centering
+            videoElement.style.transform = `translate(-50%, ${verticalOffset}%) scale(${zoomLevel})`;
+            videoElement.style.filter = 'brightness(1.05) contrast(1.02)'; // Subtle enhancement
+        }
+
+        // Zoom slider event listener
+        if (zoomSlider) {
+            zoomSlider.addEventListener('input', (e) => {
+                const zoomLevel = parseFloat(e.target.value);
+                applyZoom(zoomLevel);
+                zoomValue.textContent = `${zoomLevel}x`;
+                console.log(`🔍 Zoom adjusted to ${zoomLevel}x`);
+            });
+        }
+
+        // Show troubleshooting tips
+        function showTroubleshootingTips() {
+            if (frameCount === 0) {
+                alert('⚠️ No frames processed yet!\n\n✅ Check:\n• Backend server running?\n• Correct IP address?\n• Same WiFi network?\n• Firewall allowing Python?');
+            }
+        }
+
+        // Speak result
+        function speakResult() {
+            if (window.topPrediction) {
+                const text = window.topPrediction.replace(/_/g, ' ');
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Test backend
+        async function testBackend() {
+            try {
+                const response = await fetch(`${API_URL}/test`);
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Backend test successful!\n\nModel is working correctly.\nTop prediction: ' + data.top2[0].class);
+                } else {
+                    alert('❌ Backend test failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Backend connection failed: ' + error.message);
+            }
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startCamera);
+        recordBtn.addEventListener('click', recordVideo);
+        testBtn.addEventListener('click', testBackend);
+        speakBtn.addEventListener('click', speakResult);
+        tryAgainBtn.addEventListener('click', () => {
+            results.style.display = 'none';
+            recordBtn.disabled = false;
+        });
+
+        // Initialize
+        checkBackend().then(backendOk => {
+            if (backendOk) {
+                startBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
