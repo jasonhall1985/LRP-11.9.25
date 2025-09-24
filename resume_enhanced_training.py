@@ -1,148 +1,652 @@
 #!/usr/bin/env python3
 """
-Resume Enhanced Training: Continue from 62.39% Validation Accuracy Checkpoint
-Fine-tune with reduced learning rate and extended training schedule
-Target: 65%+ validation accuracy improvement
+Resume Training from 75.9% Checkpoint with Balanced Sampling
+Target: 82% Cross-Demographic Validation Accuracy
+
+This script loads the successful 75.9% validation accuracy checkpoint from epoch 141
+and resumes training with balanced dataset configuration to target 82% validation accuracy.
 """
 
+import os
+import csv
+import cv2
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset
-import pandas as pd
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 import numpy as np
-import cv2
-import os
+from pathlib import Path
+import time
+import random
+from collections import defaultdict, Counter
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
 import json
 from datetime import datetime
-import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
-import seaborn as sns
-from torchvision import transforms
-import random
 
-# Set random seeds for reproducibility
-torch.manual_seed(42)
-np.random.seed(42)
-random.seed(42)
-
-class LightweightCNN_LSTM(nn.Module):
-    """Proven Lightweight CNN-LSTM architecture (~2.2M parameters)"""
-
-    def __init__(self, num_classes=4, hidden_size=128, num_layers=2, dropout=0.3):
-        super(LightweightCNN_LSTM, self).__init__()
-
-        # Lightweight CNN feature extractor
-        self.cnn = nn.Sequential(
-            # First conv block
-            nn.Conv2d(1, 16, kernel_size=3, padding=1),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),  # 96x64 -> 48x32
-
-            # Second conv block
-            nn.Conv2d(16, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),  # 48x32 -> 24x16
-
-            # Third conv block
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),  # 24x16 -> 12x8
-
-            # Fourth conv block
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128),
-            nn.ReLU(),
-            nn.AdaptiveAvgPool2d((3, 2))  # Fixed output: 3x2
-        )
-
-        # CNN output size: 128 * 3 * 2 = 768
-        self.cnn_output_size = 128 * 3 * 2
-
-        # Bidirectional LSTM
-        self.lstm = nn.LSTM(
-            input_size=self.cnn_output_size,
-            hidden_size=hidden_size,
-            num_layers=num_layers,
-            batch_first=True,
-            dropout=dropout if num_layers > 1 else 0,
-            bidirectional=True
-        )
-
-        # Classifier
-        self.classifier = nn.Sequential(
-            nn.Dropout(dropout),
-            nn.Linear(hidden_size * 2, 64),
-            nn.ReLU(),
-            nn.BatchNorm1d(64),
-            nn.Dropout(dropout * 0.5),
-            nn.Linear(64, num_classes)
-        )
-
-        self.apply(self._init_weights)
-
-    def _init_weights(self, module):
-        if isinstance(module, nn.Conv2d):
-            nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
-        elif isinstance(module, nn.Linear):
-            nn.init.xavier_normal_(module.weight)
-            nn.init.constant_(module.bias, 0)
+class ResumedBalancedTrainer:
+    def __init__(self):
+        # Checkpoint configuration
+        self.checkpoint_dir = Path("backup_75.9_success_20250921_004410")
+        self.checkpoint_path = self.checkpoint_dir / "best_4class_model.pth"
+        self.train_manifest = self.checkpoint_dir / "4class_train_manifest.csv"
+        self.val_manifest = self.checkpoint_dir / "4class_validation_manifest.csv"
         
-    def forward(self, x):
-        batch_size, channels, seq_len, height, width = x.size()
-
-        # Process each frame through CNN
-        cnn_features = []
-        for t in range(seq_len):
-            frame = x[:, :, t, :, :]
-            features = self.cnn(frame)
-            features = features.view(batch_size, -1)
-            cnn_features.append(features)
-
-        # Stack temporal features
-        cnn_features = torch.stack(cnn_features, dim=1)
-
-        # LSTM processing
-        lstm_out, _ = self.lstm(cnn_features)
-
-        # Use last output for classification
-        final_features = lstm_out[:, -1]
-
-        # Classification
-        output = self.classifier(final_features)
-        return output
-
-class LipReadingDataset(Dataset):
-    """Enhanced dataset for expanded 536-video training"""
-    def __init__(self, manifest_path, data_dir, augment=False):
-        self.manifest = pd.read_csv(manifest_path)
-        self.data_dir = data_dir
-        self.augment = augment
-        self.class_to_idx = {
-            'doctor': 0,
-            'i_need_to_move': 1,
-            'my_mouth_is_dry': 2,
-            'pillow': 3
-        }
+        # Output directory for resumed training
+        self.output_dir = Path("resumed_balanced_training_results")
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Enhanced data augmentation for 82% target
-        if self.augment:
-            self.brightness_range = (-0.2, 0.2)   # ±20% (more aggressive)
-            self.contrast_range = (0.8, 1.2)      # 0.8-1.2x (wider range)
-            self.gamma_range = (0.8, 1.2)         # Gamma correction
-            self.flip_prob = 0.5                  # 50% horizontal flip
-            self.noise_prob = 0.3                 # 30% Gaussian noise
-            self.noise_std = 0.02                 # Noise standard deviation
+        # Training configuration - targeting 82% validation accuracy
+        self.batch_size = 8  # Increased from 6 for better gradient estimates
+        self.max_epochs = 60  # Extended training for 82% target
+        self.initial_lr = 0.0005  # Reduced from 0.002 for fine-tuning
+        self.device = torch.device('cpu')
         
-    def __len__(self):
-        return len(self.manifest)
+        # Target configuration
+        self.target_val_acc = 82.0  # Primary goal
+        self.early_stopping_patience = 20  # Increased patience
+        self.min_improvement = 0.1  # Minimum improvement threshold
+        
+        # Class configuration
+        self.selected_classes = ['my_mouth_is_dry', 'i_need_to_move', 'doctor', 'pillow']
+        self.class_to_idx = {cls: idx for idx, cls in enumerate(self.selected_classes)}
+        
+        # Balanced sampling configuration
+        self.use_weighted_sampler = True
+        self.balance_strategy = "weighted_random"  # or "duplicate_balancing"
+        
+        print("🎯 RESUMING TRAINING FROM 75.9% CHECKPOINT")
+        print("=" * 80)
+        print(f"📊 Target: {self.target_val_acc}% cross-demographic validation accuracy")
+        print(f"🔄 Strategy: Balanced sampling + extended training")
+        print(f"📈 Max epochs: {self.max_epochs} with early stopping patience: {self.early_stopping_patience}")
+        print(f"⚖️  Balance strategy: {self.balance_strategy}")
+        
+    def load_checkpoint_and_datasets(self):
+        """Load the 75.9% checkpoint and prepare balanced datasets."""
+        print("\n📋 LOADING CHECKPOINT AND BALANCED DATASETS")
+        print("=" * 60)
+        
+        # Verify checkpoint exists
+        if not self.checkpoint_path.exists():
+            raise FileNotFoundError(f"Checkpoint not found: {self.checkpoint_path}")
+        
+        # Load checkpoint
+        print(f"📥 Loading checkpoint: {self.checkpoint_path}")
+        self.checkpoint = torch.load(self.checkpoint_path, map_location=self.device, weights_only=False)
+        print(f"✅ Loaded checkpoint with validation accuracy: {self.checkpoint.get('best_val_acc', 'N/A')}%")
+        
+        # Create balanced datasets
+        self.train_dataset = BalancedLipReadingDataset(
+            self.train_manifest, self.class_to_idx, augment=True, is_training=True
+        )
+        self.val_dataset = BalancedLipReadingDataset(
+            self.val_manifest, self.class_to_idx, augment=False, is_training=False
+        )
+        
+        print(f"📊 Training: {len(self.train_dataset)} videos")
+        print(f"📊 Validation: {len(self.val_dataset)} videos")
+        
+        # Analyze class distribution
+        self.analyze_class_distribution()
+        
+        # Create balanced data loaders
+        self.create_balanced_data_loaders()
+        
+        print(f"✅ Checkpoint and balanced datasets loaded successfully")
     
+    def analyze_class_distribution(self):
+        """Analyze and report class distribution for balanced sampling."""
+        print("\n📊 ANALYZING CLASS DISTRIBUTION FOR BALANCED SAMPLING")
+        print("=" * 60)
+        
+        # Count classes in training set
+        train_class_counts = Counter()
+        for video in self.train_dataset.videos:
+            train_class_counts[video['class']] += 1
+        
+        # Count classes in validation set
+        val_class_counts = Counter()
+        for video in self.val_dataset.videos:
+            val_class_counts[video['class']] += 1
+        
+        print("Training set distribution:")
+        total_train = sum(train_class_counts.values())
+        for class_name in self.selected_classes:
+            count = train_class_counts[class_name]
+            percentage = (count / total_train) * 100
+            print(f"  {class_name}: {count} videos ({percentage:.1f}%)")
+        
+        print("\nValidation set distribution:")
+        total_val = sum(val_class_counts.values())
+        for class_name in self.selected_classes:
+            count = val_class_counts[class_name]
+            percentage = (count / total_val) * 100
+            print(f"  {class_name}: {count} videos ({percentage:.1f}%)")
+        
+        # Calculate class weights for balanced sampling
+        self.class_counts = [train_class_counts[cls] for cls in self.selected_classes]
+        max_count = max(self.class_counts)
+        self.class_weights_balanced = [max_count / count for count in self.class_counts]
+        
+        print(f"\nBalanced sampling weights:")
+        for i, cls in enumerate(self.selected_classes):
+            print(f"  {cls}: {self.class_weights_balanced[i]:.3f}")
+        
+        # Store for analysis
+        self.train_class_counts = train_class_counts
+        self.val_class_counts = val_class_counts
+    
+    def create_balanced_data_loaders(self):
+        """Create data loaders with balanced sampling."""
+        print(f"\n🔄 CREATING BALANCED DATA LOADERS ({self.balance_strategy})")
+        print("=" * 60)
+        
+        if self.balance_strategy == "weighted_random" and self.use_weighted_sampler:
+            # Create sample weights for WeightedRandomSampler
+            sample_weights = []
+            for video in self.train_dataset.videos:
+                class_idx = self.class_to_idx[video['class']]
+                sample_weights.append(self.class_weights_balanced[class_idx])
+            
+            # Create WeightedRandomSampler
+            sampler = WeightedRandomSampler(
+                weights=sample_weights,
+                num_samples=len(sample_weights),
+                replacement=True
+            )
+            
+            self.train_loader = DataLoader(
+                self.train_dataset, 
+                batch_size=self.batch_size, 
+                sampler=sampler,
+                num_workers=0, 
+                drop_last=True
+            )
+            
+            print(f"✅ Created WeightedRandomSampler with {len(sample_weights)} samples")
+            
+        else:
+            # Standard balanced loader with shuffle
+            self.train_loader = DataLoader(
+                self.train_dataset, 
+                batch_size=self.batch_size, 
+                shuffle=True,
+                num_workers=0, 
+                drop_last=True
+            )
+            
+            print(f"✅ Created standard balanced loader with shuffle")
+        
+        # Validation loader (no balancing needed)
+        self.val_loader = DataLoader(
+            self.val_dataset, 
+            batch_size=self.batch_size, 
+            shuffle=False, 
+            num_workers=0
+        )
+        
+        print(f"📊 Training batches: {len(self.train_loader)}")
+        print(f"📊 Validation batches: {len(self.val_loader)}")
+    
+    def setup_resumed_training(self):
+        """Setup model and training components from checkpoint."""
+        print("\n🏗️  SETTING UP RESUMED TRAINING SYSTEM")
+        print("=" * 60)
+        
+        # Initialize model with same architecture
+        self.model = ResumedLipReadingModel().to(self.device)
+        
+        # Load model state from checkpoint
+        self.model.load_state_dict(self.checkpoint['model_state_dict'])
+        print(f"✅ Loaded model state from checkpoint")
+        
+        # Get model info
+        total_params = sum(p.numel() for p in self.model.parameters())
+        trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        print(f"📊 Model parameters: {total_params:,} total, {trainable_params:,} trainable")
+        
+        # Setup optimizer with reduced learning rate for fine-tuning
+        self.optimizer = optim.AdamW(
+            self.model.parameters(), 
+            lr=self.initial_lr,  # Reduced LR for fine-tuning
+            weight_decay=1e-4,   # L2 regularization
+            betas=(0.9, 0.999)
+        )
+        
+        # Load optimizer state if available
+        if 'optimizer_state_dict' in self.checkpoint:
+            try:
+                self.optimizer.load_state_dict(self.checkpoint['optimizer_state_dict'])
+                # Update learning rate to new value
+                for param_group in self.optimizer.param_groups:
+                    param_group['lr'] = self.initial_lr
+                print(f"✅ Loaded optimizer state and updated LR to {self.initial_lr}")
+            except Exception as e:
+                print(f"⚠️  Could not load optimizer state: {e}")
+                print("   Continuing with fresh optimizer")
+        
+        # Learning rate scheduler for extended training
+        self.scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            self.optimizer, T_0=15, T_mult=1, eta_min=1e-6
+        )
+        
+        # Balanced loss function with class weights
+        class_weights_tensor = torch.tensor(self.class_weights_balanced, dtype=torch.float32).to(self.device)
+        self.criterion = nn.CrossEntropyLoss(
+            weight=class_weights_tensor,
+            label_smoothing=0.1
+        )
+        
+        # Initialize tracking variables
+        self.train_losses = []
+        self.train_accuracies = []
+        self.val_losses = []
+        self.val_accuracies = []
+        self.per_class_accuracies = []
+        self.confusion_matrices = []
+        
+        # Resume from checkpoint values
+        self.best_val_acc = self.checkpoint.get('best_val_acc', 0.0)
+        self.start_epoch = self.checkpoint.get('epoch', 0) + 1
+        self.epochs_without_improvement = 0
+        
+        print(f"✅ Resumed training setup complete:")
+        print(f"   Starting epoch: {self.start_epoch}")
+        print(f"   Best validation accuracy: {self.best_val_acc:.2f}%")
+        print(f"   Architecture: 2.98M parameter CNN-3D model")
+        print(f"   Optimizer: AdamW (lr={self.initial_lr}, fine-tuning mode)")
+        print(f"   Loss: CrossEntropyLoss with balanced class weights")
+        print(f"   Scheduler: CosineAnnealingWarmRestarts")
+
+    def train_epoch(self, epoch):
+        """Train for one epoch with balanced sampling."""
+        self.model.train()
+        running_loss = 0.0
+        correct = 0
+        total = 0
+        class_correct = defaultdict(int)
+        class_total = defaultdict(int)
+
+        epoch_start_time = time.time()
+
+        for batch_idx, (videos, labels) in enumerate(self.train_loader):
+            videos, labels = videos.to(self.device), labels.to(self.device)
+
+            self.optimizer.zero_grad()
+            outputs = self.model(videos)
+            loss = self.criterion(outputs, labels)
+            loss.backward()
+
+            # Gradient clipping for stability
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+
+            self.optimizer.step()
+
+            # Statistics
+            running_loss += loss.item()
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+            # Per-class statistics
+            for i in range(len(labels)):
+                class_name = self.selected_classes[labels[i]]
+                class_total[class_name] += 1
+                if predicted[i] == labels[i]:
+                    class_correct[class_name] += 1
+
+            # Progress reporting
+            if batch_idx % 10 == 0:
+                batch_acc = 100. * correct / total
+                print(f'Epoch {epoch}, Batch {batch_idx}/{len(self.train_loader)}: '
+                      f'Loss: {loss.item():.4f}, Acc: {batch_acc:.2f}%')
+
+        epoch_time = time.time() - epoch_start_time
+        epoch_loss = running_loss / len(self.train_loader)
+        epoch_acc = 100. * correct / total
+
+        # Per-class accuracies
+        class_accs = {}
+        for class_name in self.selected_classes:
+            if class_total[class_name] > 0:
+                class_accs[class_name] = 100. * class_correct[class_name] / class_total[class_name]
+            else:
+                class_accs[class_name] = 0.0
+
+        self.train_losses.append(epoch_loss)
+        self.train_accuracies.append(epoch_acc)
+
+        print(f'\nEpoch {epoch} Training Results:')
+        print(f'  Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.2f}%')
+        print(f'  Time: {epoch_time:.1f}s')
+        print(f'  Per-class accuracies:')
+        for class_name, acc in class_accs.items():
+            print(f'    {class_name}: {acc:.1f}%')
+
+        return epoch_loss, epoch_acc, class_accs
+
+    def validate_epoch(self, epoch):
+        """Validate for one epoch."""
+        self.model.eval()
+        running_loss = 0.0
+        correct = 0
+        total = 0
+        all_predictions = []
+        all_labels = []
+        class_correct = defaultdict(int)
+        class_total = defaultdict(int)
+
+        with torch.no_grad():
+            for videos, labels in self.val_loader:
+                videos, labels = videos.to(self.device), labels.to(self.device)
+                outputs = self.model(videos)
+                loss = self.criterion(outputs, labels)
+
+                running_loss += loss.item()
+                _, predicted = torch.max(outputs, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+
+                # Store for confusion matrix
+                all_predictions.extend(predicted.cpu().numpy())
+                all_labels.extend(labels.cpu().numpy())
+
+                # Per-class statistics
+                for i in range(len(labels)):
+                    class_name = self.selected_classes[labels[i]]
+                    class_total[class_name] += 1
+                    if predicted[i] == labels[i]:
+                        class_correct[class_name] += 1
+
+        epoch_loss = running_loss / len(self.val_loader)
+        epoch_acc = 100. * correct / total
+
+        # Per-class accuracies
+        class_accs = {}
+        for class_name in self.selected_classes:
+            if class_total[class_name] > 0:
+                class_accs[class_name] = 100. * class_correct[class_name] / class_total[class_name]
+            else:
+                class_accs[class_name] = 0.0
+
+        # Confusion matrix
+        cm = confusion_matrix(all_labels, all_predictions)
+
+        self.val_losses.append(epoch_loss)
+        self.val_accuracies.append(epoch_acc)
+        self.per_class_accuracies.append(class_accs)
+        self.confusion_matrices.append(cm)
+
+        print(f'\nEpoch {epoch} Validation Results:')
+        print(f'  Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.2f}%')
+        print(f'  Per-class accuracies:')
+        for class_name, acc in class_accs.items():
+            print(f'    {class_name}: {acc:.1f}%')
+
+        return epoch_loss, epoch_acc, class_accs, cm
+
+    def save_checkpoint(self, epoch, val_acc, is_best=False):
+        """Save training checkpoint."""
+        checkpoint = {
+            'epoch': epoch,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'scheduler_state_dict': self.scheduler.state_dict(),
+            'best_val_acc': self.best_val_acc,
+            'val_acc': val_acc,
+            'train_losses': self.train_losses,
+            'train_accuracies': self.train_accuracies,
+            'val_losses': self.val_losses,
+            'val_accuracies': self.val_accuracies,
+            'per_class_accuracies': self.per_class_accuracies,
+            'class_to_idx': self.class_to_idx,
+            'selected_classes': self.selected_classes
+        }
+
+        # Save regular checkpoint
+        checkpoint_path = self.output_dir / f"resumed_checkpoint_epoch_{epoch}.pth"
+        torch.save(checkpoint, checkpoint_path)
+
+        # Save best model
+        if is_best:
+            best_path = self.output_dir / "resumed_best_model.pth"
+            torch.save(checkpoint, best_path)
+            print(f"💾 Saved best model: {best_path}")
+
+        print(f"💾 Saved checkpoint: {checkpoint_path}")
+
+    def plot_training_curves(self):
+        """Plot and save training curves."""
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
+
+        epochs = range(1, len(self.train_losses) + 1)
+
+        # Loss curves
+        ax1.plot(epochs, self.train_losses, 'b-', label='Training Loss')
+        ax1.plot(epochs, self.val_losses, 'r-', label='Validation Loss')
+        ax1.set_title('Training and Validation Loss')
+        ax1.set_xlabel('Epoch')
+        ax1.set_ylabel('Loss')
+        ax1.legend()
+        ax1.grid(True)
+
+        # Accuracy curves
+        ax2.plot(epochs, self.train_accuracies, 'b-', label='Training Accuracy')
+        ax2.plot(epochs, self.val_accuracies, 'r-', label='Validation Accuracy')
+        ax2.axhline(y=self.target_val_acc, color='g', linestyle='--', label=f'Target ({self.target_val_acc}%)')
+        ax2.set_title('Training and Validation Accuracy')
+        ax2.set_xlabel('Epoch')
+        ax2.set_ylabel('Accuracy (%)')
+        ax2.legend()
+        ax2.grid(True)
+
+        # Per-class validation accuracies
+        if self.per_class_accuracies:
+            for class_name in self.selected_classes:
+                class_accs = [epoch_accs[class_name] for epoch_accs in self.per_class_accuracies]
+                ax3.plot(epochs, class_accs, label=class_name)
+            ax3.set_title('Per-Class Validation Accuracy')
+            ax3.set_xlabel('Epoch')
+            ax3.set_ylabel('Accuracy (%)')
+            ax3.legend()
+            ax3.grid(True)
+
+        # Learning rate
+        if hasattr(self.scheduler, 'get_last_lr'):
+            lrs = [self.scheduler.get_last_lr()[0] for _ in epochs]
+            ax4.plot(epochs, lrs, 'g-')
+            ax4.set_title('Learning Rate Schedule')
+            ax4.set_xlabel('Epoch')
+            ax4.set_ylabel('Learning Rate')
+            ax4.set_yscale('log')
+            ax4.grid(True)
+
+        plt.tight_layout()
+        curves_path = self.output_dir / "resumed_training_curves.png"
+        plt.savefig(curves_path, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        print(f"📊 Saved training curves: {curves_path}")
+
+    def run_resumed_training(self):
+        """Execute the complete resumed training pipeline."""
+        print("\n🚀 STARTING RESUMED BALANCED TRAINING PIPELINE")
+        print("=" * 80)
+
+        try:
+            # Load checkpoint and datasets
+            self.load_checkpoint_and_datasets()
+
+            # Setup training
+            self.setup_resumed_training()
+
+            print(f"\n🎯 TRAINING TARGET: {self.target_val_acc}% validation accuracy")
+            print(f"📈 Starting from: {self.best_val_acc:.2f}% (epoch {self.start_epoch-1})")
+            print(f"🔄 Max epochs: {self.max_epochs}, Early stopping: {self.early_stopping_patience}")
+
+            # Training loop
+            for epoch in range(self.start_epoch, self.max_epochs + 1):
+                print(f"\n{'='*60}")
+                print(f"EPOCH {epoch}/{self.max_epochs}")
+                print(f"{'='*60}")
+
+                # Train epoch
+                train_loss, train_acc, train_class_accs = self.train_epoch(epoch)
+
+                # Validate epoch
+                val_loss, val_acc, val_class_accs, cm = self.validate_epoch(epoch)
+
+                # Update scheduler
+                self.scheduler.step()
+
+                # Check for improvement
+                is_best = val_acc > self.best_val_acc
+                if is_best:
+                    self.best_val_acc = val_acc
+                    self.epochs_without_improvement = 0
+                    print(f"🎉 NEW BEST VALIDATION ACCURACY: {val_acc:.2f}%")
+
+                    # Check if target reached
+                    if val_acc >= self.target_val_acc:
+                        print(f"🎯 TARGET ACHIEVED! Validation accuracy: {val_acc:.2f}% >= {self.target_val_acc}%")
+                        self.save_checkpoint(epoch, val_acc, is_best=True)
+                        self.plot_training_curves()
+                        self.save_final_results(epoch, val_acc, success=True)
+                        return True
+                else:
+                    self.epochs_without_improvement += 1
+                    print(f"📉 No improvement for {self.epochs_without_improvement} epochs")
+
+                # Save checkpoint
+                self.save_checkpoint(epoch, val_acc, is_best=is_best)
+
+                # Early stopping check
+                if self.epochs_without_improvement >= self.early_stopping_patience:
+                    print(f"\n⏹️  EARLY STOPPING: No improvement for {self.early_stopping_patience} epochs")
+                    break
+
+                # Progress summary
+                print(f"\n📊 EPOCH {epoch} SUMMARY:")
+                print(f"   Train: Loss={train_loss:.4f}, Acc={train_acc:.2f}%")
+                print(f"   Val:   Loss={val_loss:.4f}, Acc={val_acc:.2f}%")
+                print(f"   Best:  {self.best_val_acc:.2f}% (target: {self.target_val_acc}%)")
+                print(f"   LR:    {self.optimizer.param_groups[0]['lr']:.6f}")
+
+            # Training completed
+            self.plot_training_curves()
+            success = self.best_val_acc >= self.target_val_acc
+            self.save_final_results(epoch, self.best_val_acc, success=success)
+
+            return success
+
+        except Exception as e:
+            print(f"\n❌ TRAINING ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def save_final_results(self, final_epoch, final_acc, success=False):
+        """Save final training results and analysis."""
+        results = {
+            'timestamp': datetime.now().isoformat(),
+            'success': bool(success),
+            'target_accuracy': float(self.target_val_acc),
+            'best_accuracy': float(self.best_val_acc),
+            'final_accuracy': float(final_acc),
+            'final_epoch': int(final_epoch),
+            'total_epochs_trained': int(final_epoch - self.start_epoch + 1),
+            'improvement_from_checkpoint': float(self.best_val_acc - self.checkpoint.get('best_val_acc', 0.0)),
+            'training_config': {
+                'batch_size': int(self.batch_size),
+                'initial_lr': float(self.initial_lr),
+                'balance_strategy': str(self.balance_strategy),
+                'early_stopping_patience': int(self.early_stopping_patience)
+            },
+            'class_distribution': {
+                'train': {k: int(v) for k, v in self.train_class_counts.items()},
+                'validation': {k: int(v) for k, v in self.val_class_counts.items()}
+            }
+        }
+
+        # Save results
+        results_path = self.output_dir / "resumed_training_results.json"
+        with open(results_path, 'w') as f:
+            json.dump(results, f, indent=2)
+
+        # Create summary report
+        report_path = self.output_dir / "resumed_training_report.txt"
+        with open(report_path, 'w') as f:
+            f.write("RESUMED BALANCED TRAINING REPORT\n")
+            f.write("=" * 80 + "\n\n")
+            f.write(f"TARGET: {self.target_val_acc}% cross-demographic validation accuracy\n")
+            f.write(f"SUCCESS: {'YES' if success else 'NO'}\n\n")
+            f.write(f"FINAL RESULTS:\n")
+            f.write(f"Best validation accuracy: {self.best_val_acc:.2f}%\n")
+            f.write(f"Improvement from checkpoint: +{results['improvement_from_checkpoint']:.2f}%\n")
+            f.write(f"Final epoch: {final_epoch}\n")
+            f.write(f"Total epochs trained: {results['total_epochs_trained']}\n\n")
+
+            if self.per_class_accuracies:
+                f.write("PER-CLASS PERFORMANCE (Best Epoch):\n")
+                best_epoch_idx = self.val_accuracies.index(max(self.val_accuracies))
+                best_class_accs = self.per_class_accuracies[best_epoch_idx]
+                for class_name, acc in best_class_accs.items():
+                    f.write(f"{class_name}: {acc:.1f}%\n")
+
+        print(f"💾 Saved final results: {results_path}")
+        print(f"📄 Saved training report: {report_path}")
+
+
+class BalancedLipReadingDataset(Dataset):
+    """Dataset class for balanced lip-reading with enhanced augmentation."""
+
+    def __init__(self, manifest_path, class_to_idx, augment=False, is_training=False):
+        self.manifest_path = Path(manifest_path)
+        self.class_to_idx = class_to_idx
+        self.augment = augment
+        self.is_training = is_training
+        self.videos = []
+
+        # Load video information from manifest
+        with open(self.manifest_path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row['class'] in self.class_to_idx:
+                    self.videos.append({
+                        'path': row['video_path'],
+                        'class': row['class'],
+                        'demographic_group': row.get('demographic_group', 'unknown')
+                    })
+
+        print(f"📊 Loaded {len(self.videos)} videos from {manifest_path}")
+
+    def __len__(self):
+        return len(self.videos)
+
+    def __getitem__(self, idx):
+        video_info = self.videos[idx]
+        video_path = video_info['path']
+        class_name = video_info['class']
+
+        # Load video frames
+        frames = self.load_video_frames(video_path)
+
+        # Apply augmentation if enabled
+        if self.augment and self.is_training:
+            frames = self.apply_augmentation(frames, class_name)
+
+        # Convert to tensor
+        frames_tensor = torch.FloatTensor(frames).unsqueeze(0)  # Add channel dimension
+        label = self.class_to_idx[class_name]
+
+        return frames_tensor, label
+
     def load_video_frames(self, video_path):
-        """Load video with consistent preprocessing"""
-        cap = cv2.VideoCapture(video_path)
+        """Load and preprocess video frames."""
+        cap = cv2.VideoCapture(str(video_path))
         frames = []
 
         while True:
@@ -150,10 +654,9 @@ class LipReadingDataset(Dataset):
             if not ret:
                 break
 
-            # Convert to grayscale and resize
+            # Convert to grayscale and normalize
             if len(frame.shape) == 3:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            frame = cv2.resize(frame, (96, 64))
 
             # Normalize to [0, 1]
             frame = frame.astype(np.float32) / 255.0
@@ -161,373 +664,139 @@ class LipReadingDataset(Dataset):
 
         cap.release()
 
-        # Convert to numpy array and ensure 32 frames
+        # Ensure we have exactly 32 frames
         frames = np.array(frames)
-
-        # Handle frame count - take center 32 frames
-        if len(frames) >= 32:
+        if len(frames) > 32:
+            # Take center 32 frames
             start_idx = (len(frames) - 32) // 2
             frames = frames[start_idx:start_idx + 32]
-        else:
-            # Pad with last frame if too short
+        elif len(frames) < 32:
+            # Pad with last frame
+            last_frame = frames[-1] if len(frames) > 0 else np.zeros((64, 96), dtype=np.float32)
             while len(frames) < 32:
-                frames = np.append(frames, [frames[-1]], axis=0)
+                frames = np.append(frames, [last_frame], axis=0)
 
         return frames
 
-    def apply_augmentation(self, frames):
-        """Apply enhanced data augmentation for 82% target"""
-        if not self.augment:
-            return frames
+    def apply_augmentation(self, frames, class_name):
+        """Apply balanced augmentation to frames."""
+        # Enhanced augmentation for balanced training
+        augmented_frames = frames.copy()
 
-        # Horizontal flip
-        if random.random() < self.flip_prob:
-            frames = np.flip(frames, axis=2).copy()
+        # Random horizontal flip (50% chance)
+        if random.random() < 0.5:
+            augmented_frames = np.flip(augmented_frames, axis=2)
 
-        # Brightness adjustment (more aggressive)
-        brightness_delta = random.uniform(*self.brightness_range)
-        frames = np.clip(frames + brightness_delta, 0, 1)
+        # Brightness adjustment (±15%)
+        brightness_factor = random.uniform(0.85, 1.15)
+        augmented_frames = np.clip(augmented_frames * brightness_factor, 0, 1)
 
-        # Contrast adjustment (wider range)
-        contrast_factor = random.uniform(*self.contrast_range)
-        frames = np.clip(frames * contrast_factor, 0, 1)
+        # Contrast adjustment (0.9-1.1x)
+        contrast_factor = random.uniform(0.9, 1.1)
+        augmented_frames = np.clip((augmented_frames - 0.5) * contrast_factor + 0.5, 0, 1)
 
-        # Gamma correction for lighting variations
-        gamma = random.uniform(*self.gamma_range)
-        frames = np.power(frames, gamma)
+        # Gamma correction (0.95-1.05x)
+        gamma = random.uniform(0.95, 1.05)
+        augmented_frames = np.power(augmented_frames, gamma)
 
-        # Gaussian noise for robustness
-        if random.random() < self.noise_prob:
-            noise = np.random.normal(0, self.noise_std, frames.shape)
-            frames = np.clip(frames + noise, 0, 1)
+        # Small amount of Gaussian noise
+        if random.random() < 0.3:
+            noise = np.random.normal(0, 0.01, augmented_frames.shape)
+            augmented_frames = np.clip(augmented_frames + noise, 0, 1)
 
-        return frames
-
-    def __getitem__(self, idx):
-        row = self.manifest.iloc[idx]
-        filename = row['filename']
-        video_path = os.path.join(self.data_dir, filename)
-
-        frames = self.load_video_frames(video_path)
-        frames = self.apply_augmentation(frames)
-
-        frames_tensor = torch.FloatTensor(frames).unsqueeze(0)
-        class_label = self.class_to_idx[row['class']]
-        label_tensor = torch.LongTensor([class_label])
-
-        return frames_tensor, label_tensor
-    
+        return augmented_frames
 
 
-def load_checkpoint_and_resume_training():
-    """Load checkpoint and resume training with fine-tuned parameters"""
-    print("🔄 RESUMING ENHANCED TRAINING FROM 62.39% CHECKPOINT")
-    print("=" * 70)
-    print("Loading checkpoint: enhanced_lightweight_model_20250923_000053.pth")
-    print("Target: 82% validation accuracy improvement")
-    
-    # Configuration
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
-    
-    # Load datasets
-    print(f"\n📊 Loading enhanced balanced datasets...")
-    train_manifest = "enhanced_balanced_training_results/enhanced_balanced_536_train_manifest.csv"
-    val_manifest = "enhanced_balanced_training_results/enhanced_balanced_536_validation_manifest.csv"
-    
-    data_dir = "data/the_best_videos_so_far"
-    train_dataset = LipReadingDataset(train_manifest, data_dir, augment=True)
-    val_dataset = LipReadingDataset(val_manifest, data_dir, augment=False)
-    
-    print(f"Enhanced Dataset: {len(train_dataset)} videos, Augmentation: ON")
-    train_class_counts = train_dataset.manifest['class'].value_counts().sort_index()
-    for class_name, count in train_class_counts.items():
-        print(f"  {class_name}: {count} videos")
-    
-    print(f"Enhanced Dataset: {len(val_dataset)} videos, Augmentation: OFF")
-    val_class_counts = val_dataset.manifest['class'].value_counts().sort_index()
-    for class_name, count in val_class_counts.items():
-        print(f"  {class_name}: {count} videos")
-    
-    # Create data loaders
-    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=0, drop_last=True)
-    val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False, num_workers=0, drop_last=False)
-    print(f"✅ Enhanced loaders: {len(train_dataset)} train, {len(val_dataset)} val")
-    
-    # Load model and checkpoint
-    print(f"\n🏗️  Loading model from checkpoint...")
-    model = LightweightCNN_LSTM(num_classes=4, hidden_size=128, num_layers=2, dropout=0.3)
-    
-    checkpoint_path = "enhanced_balanced_training_results/enhanced_lightweight_model_20250923_000053.pth"
-    if not os.path.exists(checkpoint_path):
-        print(f"❌ Checkpoint not found: {checkpoint_path}")
-        return False
-    
-    checkpoint = torch.load(checkpoint_path, map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    model.to(device)
-    
-    # Count parameters
-    total_params = sum(p.numel() for p in model.parameters())
-    print(f"Model parameters: {total_params:,} total")
-    
-    # Setup optimizer with aggressive optimization for 82% target
-    optimizer = optim.AdamW(model.parameters(), lr=0.0003, weight_decay=1e-3, betas=(0.9, 0.999))  # AdamW with stronger regularization
+class ResumedLipReadingModel(nn.Module):
+    """Identical model architecture to the 75.9% checkpoint."""
 
-    # Load optimizer state if available
-    if 'optimizer_state_dict' in checkpoint:
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        # Update learning rate and parameters in loaded optimizer
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.0003
-            param_group['weight_decay'] = 1e-3
+    def __init__(self):
+        super(ResumedLipReadingModel, self).__init__()
 
-    # Label smoothing for better generalization
-    class LabelSmoothingCrossEntropy(nn.Module):
-        def __init__(self, smoothing=0.1):
-            super().__init__()
-            self.smoothing = smoothing
+        # IDENTICAL architecture from successful 75.9% training
+        self.conv3d1 = nn.Conv3d(1, 32, kernel_size=(3, 3, 3), padding=1)
+        self.bn3d1 = nn.BatchNorm3d(32)
+        self.pool3d1 = nn.MaxPool3d(kernel_size=(1, 2, 2))  # Spatial only
 
-        def forward(self, pred, target):
-            n_classes = pred.size(-1)
-            one_hot = torch.zeros_like(pred).scatter(1, target.unsqueeze(1), 1)
-            smooth_one_hot = one_hot * (1 - self.smoothing) + self.smoothing / n_classes
-            return -(smooth_one_hot * pred.log_softmax(dim=-1)).sum(dim=-1).mean()
+        self.conv3d2 = nn.Conv3d(32, 64, kernel_size=(3, 3, 3), padding=1)
+        self.bn3d2 = nn.BatchNorm3d(64)
+        self.pool3d2 = nn.MaxPool3d(kernel_size=(2, 2, 2))  # Temporal + spatial
 
-    criterion = LabelSmoothingCrossEntropy(smoothing=0.1)
+        self.conv3d3 = nn.Conv3d(64, 96, kernel_size=(3, 3, 3), padding=1)
+        self.bn3d3 = nn.BatchNorm3d(96)
+        self.pool3d3 = nn.MaxPool3d(kernel_size=(2, 2, 2))  # Temporal + spatial
 
-    # Cosine annealing with warm restarts for better convergence
-    scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=1e-6)
-    
-    # Resume training configuration
-    start_epoch = checkpoint.get('epoch', 0) + 1  # Continue from next epoch
-    best_val_acc = checkpoint.get('best_val_acc', 0.6239)  # 62.39% baseline
-    max_epochs = 60  # Extended from 40
-    patience = 30    # Extended from 15
-    epochs_without_improvement = 0
-    
-    print(f"\n🚀 Aggressive optimization configuration for 82% target:")
-    print(f"Starting epoch: {start_epoch}")
-    print(f"Best validation accuracy: {best_val_acc:.4f} (62.39% baseline)")
-    print(f"Optimizer: AdamW with lr=0.0003, weight_decay=1e-3")
-    print(f"Scheduler: CosineAnnealingWarmRestarts (T_0=10, T_mult=2)")
-    print(f"Loss: Label Smoothing CrossEntropy (smoothing=0.1)")
-    print(f"Augmentation: Enhanced (brightness ±20%, contrast 0.8-1.2x, gamma, noise)")
-    print(f"Max epochs: {max_epochs} (extended from 40)")
-    print(f"Early stopping patience: {patience} (extended from 15)")
-    print(f"Target: ≥82% validation accuracy")
-    
-    # Training history
-    train_losses = []
-    train_accs = []
-    val_losses = []
-    val_accs = []
-    learning_rates = []
-    
-    print(f"\nStarting resumed training...")
-    print("=" * 85)
-    
-    for epoch in range(start_epoch, max_epochs + 1):
-        # Training phase
-        model.train()
-        train_loss = 0.0
-        train_correct = 0
-        train_total = 0
-        
-        for batch_idx, (videos, labels) in enumerate(train_loader):
-            videos, labels = videos.to(device), labels.to(device).squeeze()
-            
-            # Skip empty batches
-            if videos.size(0) == 0 or labels.size(0) == 0:
-                continue
-            
-            optimizer.zero_grad()
-            outputs = model(videos)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            
-            # Gradient clipping
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            
-            optimizer.step()
-            
-            train_loss += loss.item()
-            _, predicted = torch.max(outputs.data, 1)
-            train_total += labels.size(0)
-            train_correct += (predicted == labels).sum().item()
-        
-        train_acc = train_correct / train_total if train_total > 0 else 0
-        avg_train_loss = train_loss / len(train_loader)
-        
-        # Validation phase
-        model.eval()
-        val_loss = 0.0
-        val_correct = 0
-        val_total = 0
-        
-        with torch.no_grad():
-            for videos, labels in val_loader:
-                videos, labels = videos.to(device), labels.to(device).squeeze()
-                
-                # Skip empty batches
-                if videos.size(0) == 0 or labels.size(0) == 0:
-                    continue
-                
-                outputs = model(videos)
-                loss = criterion(outputs, labels)
-                
-                val_loss += loss.item()
-                _, predicted = torch.max(outputs.data, 1)
-                val_total += labels.size(0)
-                val_correct += (predicted == labels).sum().item()
-        
-        val_acc = val_correct / val_total if val_total > 0 else 0
-        avg_val_loss = val_loss / len(val_loader)
-        
-        # Learning rate scheduling (cosine annealing)
-        scheduler.step()
-        current_lr = optimizer.param_groups[0]['lr']
-        
-        # Record metrics
-        train_losses.append(avg_train_loss)
-        train_accs.append(train_acc)
-        val_losses.append(avg_val_loss)
-        val_accs.append(val_acc)
-        learning_rates.append(current_lr)
-        
-        # Progress display
-        val_acc_pct = int(val_acc * 100)
-        target_indicator = "🎯 TARGET!" if val_acc >= 0.82 else ""
-        print(f"Epoch {epoch:2d}/{max_epochs}: Train: {train_acc:.4f} ({avg_train_loss:.4f}) | "
-              f"Val: {val_acc:.4f} ({avg_val_loss:.4f}) | LR: {current_lr:.6f} ({val_acc_pct}%) {target_indicator}")
-        
-        # Check for improvement
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            epochs_without_improvement = 0
-            
-            # Save best model
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            best_model_path = f"enhanced_balanced_training_results/resumed_best_model_{timestamp}.pth"
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'best_val_acc': best_val_acc,
-                'train_losses': train_losses,
-                'train_accs': train_accs,
-                'val_losses': val_losses,
-                'val_accs': val_accs,
-                'learning_rates': learning_rates
-            }, best_model_path)
-            
-            print(f"💾 New best model saved: {best_model_path}")
-            
-        else:
-            epochs_without_improvement += 1
-        
-        # Early stopping check
-        if epochs_without_improvement >= patience:
-            print(f"\n⏹️  Early stopping triggered after {patience} epochs without improvement")
-            break
-        
-        # Target achievement check
-        if val_acc >= 0.82:
-            print(f"\n🎯 TARGET ACHIEVED! Validation accuracy: {val_acc:.4f} (≥82%)")
-            break
-    
-    print("=" * 85)
-    print("✅ Resumed training completed!")
-    print(f"🏆 Best validation accuracy: {best_val_acc:.4f}")
-    improvement = ((best_val_acc - 0.6239) / 0.6239) * 100
-    print(f"📈 Improvement vs. 62.39% baseline: +{improvement:.1f}%")
-    
-    # Generate training curves
-    print("📊 Generating extended training curves...")
-    plot_extended_training_curves(train_losses, train_accs, val_losses, val_accs, learning_rates, start_epoch)
-    
-    return True, best_val_acc
+        self.conv3d4 = nn.Conv3d(96, 128, kernel_size=(3, 3, 3), padding=1)
+        self.bn3d4 = nn.BatchNorm3d(128)
+        self.adaptive_pool = nn.AdaptiveAvgPool3d((3, 3, 4))  # Adaptive pooling
 
-def plot_extended_training_curves(train_losses, train_accs, val_losses, val_accs, learning_rates, start_epoch):
-    """Plot extended training curves showing resumed training progression"""
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
-    
-    epochs = range(start_epoch, start_epoch + len(train_losses))
-    
-    # Loss curves
-    ax1.plot(epochs, train_losses, 'b-', label='Training Loss', linewidth=2)
-    ax1.plot(epochs, val_losses, 'r-', label='Validation Loss', linewidth=2)
-    ax1.axvline(x=35, color='gray', linestyle='--', alpha=0.7, label='Original Training End')
-    ax1.set_title('Extended Training: Loss Curves', fontsize=14, fontweight='bold')
-    ax1.set_xlabel('Epoch')
-    ax1.set_ylabel('Loss')
-    ax1.legend()
-    ax1.grid(True, alpha=0.3)
-    
-    # Accuracy curves
-    ax2.plot(epochs, [acc * 100 for acc in train_accs], 'b-', label='Training Accuracy', linewidth=2)
-    ax2.plot(epochs, [acc * 100 for acc in val_accs], 'r-', label='Validation Accuracy', linewidth=2)
-    ax2.axhline(y=62.39, color='orange', linestyle='--', alpha=0.7, label='62.39% Baseline')
-    ax2.axhline(y=82.0, color='green', linestyle='--', alpha=0.7, label='82% Target')
-    ax2.axvline(x=35, color='gray', linestyle='--', alpha=0.7, label='Original Training End')
-    ax2.set_title('Extended Training: Accuracy Curves', fontsize=14, fontweight='bold')
-    ax2.set_xlabel('Epoch')
-    ax2.set_ylabel('Accuracy (%)')
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
-    
-    # Learning rate
-    ax3.plot(epochs, learning_rates, 'g-', linewidth=2)
-    ax3.axvline(x=35, color='gray', linestyle='--', alpha=0.7, label='Original Training End')
-    ax3.set_title('Learning Rate Schedule', fontsize=14, fontweight='bold')
-    ax3.set_xlabel('Epoch')
-    ax3.set_ylabel('Learning Rate')
-    ax3.set_yscale('log')
-    ax3.legend()
-    ax3.grid(True, alpha=0.3)
-    
-    # Overfitting gap
-    overfitting_gap = [(train_acc - val_acc) * 100 for train_acc, val_acc in zip(train_accs, val_accs)]
-    ax4.plot(epochs, overfitting_gap, 'purple', linewidth=2)
-    ax4.axhline(y=0, color='black', linestyle='-', alpha=0.3)
-    ax4.axvline(x=35, color='gray', linestyle='--', alpha=0.7, label='Original Training End')
-    ax4.set_title('Overfitting Gap (Train - Val Accuracy)', fontsize=14, fontweight='bold')
-    ax4.set_xlabel('Epoch')
-    ax4.set_ylabel('Accuracy Gap (%)')
-    ax4.legend()
-    ax4.grid(True, alpha=0.3)
-    
-    plt.tight_layout()
-    
-    # Save plot
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    plot_path = f"enhanced_balanced_training_results/extended_training_curves_{timestamp}.png"
-    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Extended training curves saved: {plot_path}")
-    
-    plt.show()
+        # Feature size: 128 * 3 * 3 * 4 = 4,608 (IDENTICAL)
+        self.feature_size = 128 * 3 * 3 * 4
+
+        # IDENTICAL fully connected layers
+        self.dropout1 = nn.Dropout(0.4)
+        self.fc1 = nn.Linear(self.feature_size, 512)
+        self.bn_fc1 = nn.BatchNorm1d(512)
+
+        self.dropout2 = nn.Dropout(0.3)
+        self.fc2 = nn.Linear(512, 128)
+        self.bn_fc2 = nn.BatchNorm1d(128)
+
+        self.dropout3 = nn.Dropout(0.2)
+        self.fc3 = nn.Linear(128, 32)
+
+        # 4-class output (same as successful training)
+        self.fc_out = nn.Linear(32, 4)
+
+    def forward(self, x):
+        # IDENTICAL forward pass from successful training
+        x = F.relu(self.bn3d1(self.conv3d1(x)))
+        x = self.pool3d1(x)
+
+        x = F.relu(self.bn3d2(self.conv3d2(x)))
+        x = self.pool3d2(x)
+
+        x = F.relu(self.bn3d3(self.conv3d3(x)))
+        x = self.pool3d3(x)
+
+        x = F.relu(self.bn3d4(self.conv3d4(x)))
+        x = self.adaptive_pool(x)
+
+        # Flatten and classify
+        x = x.view(x.size(0), -1)
+
+        x = self.dropout1(x)
+        x = F.relu(self.bn_fc1(self.fc1(x)))
+
+        x = self.dropout2(x)
+        x = F.relu(self.bn_fc2(self.fc2(x)))
+
+        x = self.dropout3(x)
+        x = F.relu(self.fc3(x))
+        x = self.fc_out(x)
+
+        return x
+
 
 def main():
-    """Execute resumed training from 62.39% checkpoint"""
-    print("🎯 ENHANCED MODEL FINE-TUNING")
-    print("=" * 50)
-    print("Resuming from 62.39% validation accuracy checkpoint")
-    print("Target: 82% validation accuracy with aggressive optimization")
-    
-    success, final_acc = load_checkpoint_and_resume_training()
-    
+    """Execute resumed balanced training pipeline."""
+    print("🎯 STARTING RESUMED BALANCED TRAINING FROM 75.9% CHECKPOINT")
+    print("🚀 TARGET: 82% Cross-Demographic Validation Accuracy")
+    print("⚖️  STRATEGY: Balanced sampling + extended fine-tuning")
+
+    trainer = ResumedBalancedTrainer()
+    success = trainer.run_resumed_training()
+
     if success:
-        print(f"\n🎉 RESUMED TRAINING COMPLETE")
-        print(f"🏆 Final validation accuracy: {final_acc:.4f} ({final_acc*100:.2f}%)")
-        target_achieved = "✅ YES" if final_acc >= 0.82 else "❌ NO"
-        print(f"🎯 82% target achieved: {target_achieved}")
-        print("📊 Extended training curves generated")
-        print("💾 Best model checkpoint saved")
+        print("\n🎉 TRAINING SUCCESS!")
+        print(f"✅ Successfully achieved {trainer.target_val_acc}% validation accuracy target")
+        print(f"📈 Best accuracy: {trainer.best_val_acc:.2f}%")
+        print("🚀 Model ready for production deployment")
     else:
-        print("❌ Resumed training failed")
-    
-    return success
+        print("\n💡 Training completed with valuable progress")
+        print(f"📊 Best accuracy achieved: {trainer.best_val_acc:.2f}%")
+        print(f"🎯 Target was: {trainer.target_val_acc}%")
+        print("🔍 Check results for further optimization strategies")
 
 if __name__ == "__main__":
-    success = main()
-    exit(0 if success else 1)
+    main()
