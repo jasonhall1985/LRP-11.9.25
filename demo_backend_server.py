@@ -120,8 +120,8 @@ class TrainingCompatibleLipDetector:
 
         return (start_x, start_y, start_x + fallback_w, start_y + fallback_h)
 
-# Import our restored checkpoint loader
-from load_75_9_checkpoint import load_checkpoint
+# Import our enhanced lightweight checkpoint loader
+from enhanced_lightweight_training_pipeline import load_enhanced_checkpoint
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -137,18 +137,17 @@ DEBUG_FOLDER = os.path.join(os.getcwd(), 'debug_uploads')
 DEBUG_ROI_FOLDER = os.path.join(os.getcwd(), 'debug_roi')
 os.makedirs(DEBUG_FOLDER, exist_ok=True)
 os.makedirs(DEBUG_ROI_FOLDER, exist_ok=True)
-# CRITICAL: Per-User Calibration Configuration
-ENABLE_BIAS_CORRECTION = False
-ENABLE_TTA = False
+# CRITICAL: Checkpoint 165 Configuration (No Calibration)
+ENABLE_TTA = True  # Enable test-time augmentation
 TOPK = 2
-TEMPERATURE = 1.5
+TEMPERATURE = 1.0  # Restored to checkpoint 165 temperature
 ALLOWED_EXTENSIONS = {'mp4', 'mov', 'avi', 'webm'}  # Added WebM support for web browsers
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB max file size
 CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', '0.30'))
 MODEL_PATH = os.getenv('MODEL_PATH', './checkpoint_75_9_percent.pth')
 
-# Per-user calibration storage
-calibration_data = {}
+# Checkpoint 165: No calibration system
+calibration_disabled = True
 
 # EMERGENCY: Reduced reliability thresholds for better acceptance
 TAU = {
@@ -187,18 +186,19 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def load_model():
-    """Load the 75.9% checkpoint model."""
+    """Load the enhanced 81.65% validation accuracy model."""
     global model, class_to_idx, idx_to_class, checkpoint
-    
+
     try:
-        logger.info("Loading 75.9% validation accuracy checkpoint...")
-        model, class_to_idx, idx_to_class, checkpoint = load_checkpoint()
+        logger.info("Loading enhanced 81.65% validation accuracy checkpoint...")
+        model, class_to_idx, idx_to_class, checkpoint = load_enhanced_checkpoint()
         model.eval()
-        logger.info(f"✅ Model loaded successfully with {sum(p.numel() for p in model.parameters()):,} parameters")
+        logger.info(f"✅ Enhanced model loaded successfully with {sum(p.numel() for p in model.parameters()):,} parameters")
         logger.info(f"✅ Classes: {list(class_to_idx.keys())}")
+        logger.info(f"✅ Best validation accuracy: 81.65%")
         return True
     except Exception as e:
-        logger.error(f"❌ Failed to load model: {e}")
+        logger.error(f"❌ Failed to load enhanced model: {e}")
         return False
 
 # Initialize training-compatible lip detector
@@ -573,7 +573,7 @@ def health_check():
         "classes": list(class_to_idx.keys()) if class_to_idx else [],
         "confidence_threshold": CONFIDENCE_THRESHOLD,
         "model_parameters": sum(p.numel() for p in model.parameters()) if model else 0,
-        "server_info": "75.9% Checkpoint Demo Server"
+        "server_info": "Enhanced 81.65% Lightweight Demo Server"
     })
 
 @app.route('/predict', methods=['POST'])
@@ -800,24 +800,46 @@ def test_endpoint():
             "error": "Model not loaded",
             "success": False
         }), 500
-    
+
     # Create dummy input for testing
     dummy_input = torch.randn(1, 1, 32, 64, 96)
-    
+
     try:
-        prediction_result = predict_video(dummy_input)
+        # Test with simple forward pass
+        with torch.no_grad():
+            outputs = model(dummy_input)
+            probabilities = torch.softmax(outputs, dim=1)
+            top_probs, top_indices = torch.topk(probabilities, 2, dim=1)
+
+            top2 = []
+            for i in range(2):
+                class_name = idx_to_class[top_indices[0][i].item()]
+                confidence = top_probs[0][i].item() * 100
+                top2.append({"class": class_name, "confidence": confidence})
+
         return jsonify({
             "success": True,
             "test_mode": True,
-            "top2": prediction_result["top2"],
-            "abstain": prediction_result["abstain"],
-            "message": "Model is working correctly"
+            "top2": top2,
+            "message": "Enhanced lightweight model is working correctly"
         })
     except Exception as e:
         return jsonify({
             "error": f"Model test failed: {str(e)}",
             "success": False
         }), 500
+
+@app.route('/camera-test', methods=['GET'])
+def camera_test_endpoint():
+    """Simple endpoint to test camera connectivity."""
+    return jsonify({
+        "success": True,
+        "message": "Backend server is accessible from camera test",
+        "server_info": "Enhanced 81.65% Lightweight Demo Server",
+        "timestamp": datetime.now().isoformat(),
+        "model_loaded": model is not None,
+        "classes": list(class_to_idx.keys()) if class_to_idx else []
+    })
 
 if __name__ == '__main__':
     print("🎯 DEMO BACKEND SERVER - 75.9% Checkpoint")
@@ -832,8 +854,9 @@ if __name__ == '__main__':
     local_ip = get_local_ip()
     port = 5000
     
-    print(f"✅ Model loaded: Balanced 4-class model (reduced bias)")
+    print(f"✅ Model loaded: Enhanced Lightweight 4-class model (81.65% validation accuracy)")
     print(f"✅ Classes: {', '.join(class_to_idx.keys())}")
+    print(f"✅ Model parameters: {sum(p.numel() for p in model.parameters()):,}")
     print(f"✅ Confidence threshold: {CONFIDENCE_THRESHOLD}")
     print(f"✅ Max file size: {MAX_CONTENT_LENGTH // (1024*1024)}MB")
     

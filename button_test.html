@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #2196F3;
+            color: white;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Button Functionality Test</h1>
+        <p>Testing if buttons work and can connect to backend.</p>
+        
+        <button id="testBtn1" onclick="testFunction1()">Test Alert</button>
+        <button id="testBtn2">Test Backend Health</button>
+        <button id="testBtn3">Test Camera API</button>
+        <button id="startBtn" disabled>Start Camera (Disabled)</button>
+        
+        <div class="log" id="logOutput">
+            <strong>Test Log:</strong><br>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        const logOutput = document.getElementById('logOutput');
+        const testBtn2 = document.getElementById('testBtn2');
+        const testBtn3 = document.getElementById('testBtn3');
+        const startBtn = document.getElementById('startBtn');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logOutput.innerHTML += `[${timestamp}] ${message}<br>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+        
+        function testFunction1() {
+            log('✅ Alert button clicked - JavaScript is working!');
+            alert('Button clicked! JavaScript is working.');
+        }
+        
+        async function testBackendHealth() {
+            log('🔗 Testing backend health...');
+            
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    log('✅ Backend health check successful!');
+                    log(`📊 Server: ${data.server_info}`);
+                    log(`🤖 Model: ${data.model_parameters} parameters`);
+                    startBtn.disabled = false;
+                    startBtn.textContent = 'Start Camera (Enabled)';
+                } else {
+                    log('❌ Backend health check failed');
+                }
+            } catch (error) {
+                log(`❌ Backend connection failed: ${error.message}`);
+            }
+        }
+        
+        async function testCameraAPI() {
+            log('📹 Testing camera API...');
+            
+            if (!navigator.mediaDevices) {
+                log('❌ MediaDevices API not supported');
+                return;
+            }
+            
+            if (!navigator.mediaDevices.getUserMedia) {
+                log('❌ getUserMedia not supported');
+                return;
+            }
+            
+            log('✅ Camera API is supported');
+            
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                log(`📷 Found ${videoDevices.length} camera(s)`);
+                
+                videoDevices.forEach((device, index) => {
+                    log(`  Camera ${index + 1}: ${device.label || 'Unknown'}`);
+                });
+            } catch (error) {
+                log(`❌ Error checking cameras: ${error.message}`);
+            }
+        }
+        
+        function startCamera() {
+            log('🎥 Start camera button clicked!');
+            alert('Start camera functionality would go here');
+        }
+        
+        // Set up event listeners
+        testBtn2.addEventListener('click', testBackendHealth);
+        testBtn3.addEventListener('click', testCameraAPI);
+        startBtn.addEventListener('click', startCamera);
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            log('🎯 Button test page loaded');
+            log('📍 Current URL: ' + window.location.href);
+            log('🔗 API URL: ' + API_URL);
+            log('✅ Event listeners set up');
+        });
+    </script>
+</body>
+</html>

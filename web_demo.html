@@ -302,7 +302,7 @@
         <div class="status">
             <div class="status-item">
                 <span>🤖 Model:</span>
-                <span id="modelStatus" class="status-good">75.9% Accuracy (2.98M params)</span>
+                <span id="modelStatus" class="status-good">81.65% Accuracy (721K params)</span>
             </div>
             <div class="status-item">
                 <span>🌐 Backend:</span>
@@ -390,7 +390,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://192.168.1.100:5000';  // Balanced 72.4% model - AUTHENTIC PREDICTIONS
+        const API_URL = 'http://localhost:5000';  // Enhanced 81.65% model - Production Ready
         let mediaRecorder;
         let recordedChunks = [];
         let stream;
@@ -437,7 +437,22 @@
 
         // Start camera
         async function startCamera() {
+            console.log('🎯 Starting camera initialization...');
+
+            // Check if getUserMedia is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.error('❌ getUserMedia not supported');
+                cameraStatus.textContent = '❌ Not Supported';
+                cameraStatus.className = 'status-warning';
+                alert('Camera API not supported in this browser. Please use Chrome, Firefox, or Safari.');
+                return false;
+            }
+
             try {
+                console.log('📹 Requesting camera access...');
+                cameraStatus.textContent = '🔄 Requesting...';
+                cameraStatus.className = 'status-warning';
+
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         width: { ideal: 1280 },  /* Higher resolution for better zoom quality */
@@ -447,6 +462,8 @@
                     },
                     audio: true
                 });
+
+                console.log('✅ Camera access granted, setting up video element...');
                 videoElement.srcObject = stream;
 
                 // Initialize with moderate default zoom
@@ -460,11 +477,28 @@
                 cameraStatus.className = 'status-good';
                 startBtn.style.display = 'none';
                 recordBtn.disabled = false;
+                console.log('🎯 Camera initialization complete!');
                 return true;
             } catch (error) {
+                console.error('❌ Camera initialization failed:', error);
+                console.error('Error name:', error.name);
+                console.error('Error message:', error.message);
+
                 cameraStatus.textContent = '❌ Failed';
                 cameraStatus.className = 'status-warning';
-                alert('Camera access denied. Please allow camera permissions and refresh.');
+
+                let errorMessage = 'Camera access failed. ';
+                if (error.name === 'NotAllowedError') {
+                    errorMessage += 'Please allow camera permissions and refresh the page.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += 'No camera found. Please connect a camera and refresh.';
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage += 'Camera is being used by another application. Please close other apps and refresh.';
+                } else {
+                    errorMessage += `Error: ${error.message}`;
+                }
+
+                alert(errorMessage);
                 return false;
             }
         }
@@ -647,19 +681,85 @@
         }
 
         // Event listeners
-        startBtn.addEventListener('click', startCamera);
-        recordBtn.addEventListener('click', recordVideo);
-        testBtn.addEventListener('click', testBackend);
-        speakBtn.addEventListener('click', speakResult);
+        console.log('🎯 Setting up event listeners...');
+
+        startBtn.addEventListener('click', () => {
+            console.log('🎥 Start Camera button clicked');
+            startCamera();
+        });
+
+        recordBtn.addEventListener('click', () => {
+            console.log('🎬 Record button clicked');
+            recordVideo();
+        });
+
+        testBtn.addEventListener('click', () => {
+            console.log('🧪 Test Backend button clicked');
+            testBackend();
+        });
+
+        speakBtn.addEventListener('click', () => {
+            console.log('🔊 Speak button clicked');
+            speakResult();
+        });
+
         tryAgainBtn.addEventListener('click', () => {
+            console.log('🔄 Try Again button clicked');
             results.style.display = 'none';
             recordBtn.disabled = false;
         });
 
-        // Initialize
-        checkBackend().then(backendOk => {
-            if (backendOk) {
+        console.log('✅ Event listeners set up successfully');
+
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            console.log('🎯 Lip-Reading Demo Initialized');
+            console.log('🌐 Current URL:', window.location.href);
+            console.log('🔗 API URL:', API_URL);
+
+            // Check DOM elements
+            console.log('🔍 Checking DOM elements...');
+            console.log('startBtn:', startBtn ? '✅ Found' : '❌ Missing');
+            console.log('testBtn:', testBtn ? '✅ Found' : '❌ Missing');
+            console.log('backendStatus:', backendStatus ? '✅ Found' : '❌ Missing');
+            console.log('cameraStatus:', cameraStatus ? '✅ Found' : '❌ Missing');
+
+            // Check browser compatibility
+            console.log('🔍 Checking browser compatibility...');
+            if (!navigator.mediaDevices) {
+                console.error('❌ MediaDevices API not supported');
+                cameraStatus.textContent = '❌ Not Supported';
+                cameraStatus.className = 'status-warning';
+            } else if (!navigator.mediaDevices.getUserMedia) {
+                console.error('❌ getUserMedia not supported');
+                cameraStatus.textContent = '❌ Not Supported';
+                cameraStatus.className = 'status-warning';
+            } else {
+                console.log('✅ Camera API supported');
+                cameraStatus.textContent = '⏳ Ready';
+                cameraStatus.className = 'status-warning';
+            }
+
+            // Check for HTTPS (required for camera access)
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                console.warn('⚠️ Camera access requires HTTPS or localhost');
+                alert('Camera access requires HTTPS or localhost. Please use https:// or access via localhost.');
+            }
+
+            // Check backend and enable start button
+            console.log('🔗 Testing backend connection...');
+            const backendOk = await checkBackend();
+            console.log('Backend OK:', backendOk);
+
+            if (backendOk && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 startBtn.disabled = false;
+                console.log('✅ All systems ready - Start Camera button enabled');
+            } else {
+                console.log('❌ System not ready:', {
+                    backendOk,
+                    mediaDevices: !!navigator.mediaDevices,
+                    getUserMedia: !!navigator.mediaDevices?.getUserMedia
+                });
             }
         });
     </script>

@@ -544,11 +544,43 @@ class LightweightCNNLSTM(nn.Module):
         return x
 
 
+def load_enhanced_checkpoint():
+    """Load the enhanced 81.65% validation accuracy checkpoint."""
+    import torch
+    import os
+
+    # Model path
+    model_path = "best_lightweight_model.pth"
+    if not os.path.exists(model_path):
+        model_path = "checkpoint_enhanced_81_65_percent_success_20250924/best_lightweight_model.pth"
+
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Enhanced checkpoint not found at {model_path}")
+
+    # Load checkpoint
+    checkpoint = torch.load(model_path, map_location='cpu')
+
+    # Create model
+    model = LightweightCNNLSTM()
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
+
+    # Extract class mappings
+    class_to_idx = checkpoint['class_to_idx']
+    idx_to_class = {v: k for k, v in class_to_idx.items()}
+
+    print(f"✅ Enhanced model loaded successfully!")
+    print(f"✅ Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+    print(f"✅ Classes: {list(class_to_idx.keys())}")
+    print(f"✅ Best validation accuracy: 81.65%")
+
+    return model, class_to_idx, idx_to_class, checkpoint
+
 def main():
     """Execute enhanced lightweight training pipeline."""
     print("🚀 ENHANCED LIGHTWEIGHT 4-CLASS LIP-READING TRAINING")
     print("🎯 TARGET: 75-80% Validation Accuracy with 536-Video Dataset")
-    
+
     trainer = EnhancedLightweightTrainer()
     success, best_acc = trainer.run_enhanced_training()
     

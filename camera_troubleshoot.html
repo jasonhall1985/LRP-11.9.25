@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Camera Troubleshooting Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success { background: rgba(76, 175, 80, 0.3); border: 1px solid #4CAF50; }
+        .status.error { background: rgba(244, 67, 54, 0.3); border: 1px solid #f44336; }
+        .status.warning { background: rgba(255, 193, 7, 0.3); border: 1px solid #FFC107; }
+        .status.info { background: rgba(33, 150, 243, 0.3); border: 1px solid #2196F3; }
+        
+        button {
+            padding: 12px 24px;
+            margin: 8px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-warning { background: #FF9800; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            border: 3px solid #374151;
+            border-radius: 15px;
+            background: #000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .checklist li:before {
+            content: "❌ ";
+            margin-right: 8px;
+        }
+        .checklist li.success:before {
+            content: "✅ ";
+        }
+        .checklist li.warning:before {
+            content: "⚠️ ";
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Camera Troubleshooting Guide</h1>
+        <p>This tool will help diagnose and fix camera access issues in the lip-reading demo.</p>
+        
+        <div class="section">
+            <h2>📊 System Status</h2>
+            <div id="systemStatus" class="status info">Checking system compatibility...</div>
+            
+            <div class="grid">
+                <div>
+                    <h3>🔍 Compatibility Checklist</h3>
+                    <ul id="compatibilityList" class="checklist">
+                        <li id="check-mediadevices">MediaDevices API Support</li>
+                        <li id="check-getusermedia">getUserMedia Support</li>
+                        <li id="check-protocol">Secure Context (HTTPS/localhost)</li>
+                        <li id="check-backend">Backend Server Connection</li>
+                        <li id="check-cameras">Camera Devices Available</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3>🎮 Test Controls</h3>
+                    <button id="runDiagnosticsBtn" class="btn-primary">🔍 Run Full Diagnostics</button>
+                    <button id="testBackendBtn" class="btn-primary">🔗 Test Backend</button>
+                    <button id="listCamerasBtn" class="btn-primary">📹 List Cameras</button>
+                    <button id="testCameraBtn" class="btn-success" disabled>📸 Test Camera</button>
+                    <button id="stopCameraBtn" class="btn-danger" disabled>🛑 Stop Camera</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📹 Camera Test</h2>
+            <video id="videoElement" autoplay muted playsinline>
+                Your browser does not support the video element.
+            </video>
+        </div>
+        
+        <div class="section">
+            <h2>📝 Diagnostic Log</h2>
+            <div class="log" id="logOutput">
+                <strong>Diagnostic Log:</strong><br>
+                Waiting for diagnostics to run...<br>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🛠️ Common Solutions</h2>
+            <div class="grid">
+                <div>
+                    <h3>🔒 Permission Issues</h3>
+                    <ul>
+                        <li>Click the camera icon in your browser's address bar</li>
+                        <li>Select "Always allow" for camera access</li>
+                        <li>Refresh the page after granting permissions</li>
+                        <li>Check System Preferences → Security & Privacy → Camera</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3>📱 Browser Issues</h3>
+                    <ul>
+                        <li>Try Chrome, Firefox, or Safari (latest versions)</li>
+                        <li>Disable browser extensions temporarily</li>
+                        <li>Clear browser cache and cookies</li>
+                        <li>Try incognito/private browsing mode</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3>🎥 Hardware Issues</h3>
+                    <ul>
+                        <li>Check if camera is being used by another app</li>
+                        <li>Restart your computer</li>
+                        <li>Try a different camera if available</li>
+                        <li>Update camera drivers</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3>🌐 Network Issues</h3>
+                    <ul>
+                        <li>Ensure backend server is running on localhost:5000</li>
+                        <li>Check firewall settings</li>
+                        <li>Try accessing via http://localhost:8080/</li>
+                        <li>Disable VPN if active</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const systemStatus = document.getElementById('systemStatus');
+        const logOutput = document.getElementById('logOutput');
+        const videoElement = document.getElementById('videoElement');
+        
+        // Buttons
+        const runDiagnosticsBtn = document.getElementById('runDiagnosticsBtn');
+        const testBackendBtn = document.getElementById('testBackendBtn');
+        const listCamerasBtn = document.getElementById('listCamerasBtn');
+        const testCameraBtn = document.getElementById('testCameraBtn');
+        const stopCameraBtn = document.getElementById('stopCameraBtn');
+        
+        // Checklist items
+        const checkMediaDevices = document.getElementById('check-mediadevices');
+        const checkGetUserMedia = document.getElementById('check-getusermedia');
+        const checkProtocol = document.getElementById('check-protocol');
+        const checkBackend = document.getElementById('check-backend');
+        const checkCameras = document.getElementById('check-cameras');
+        
+        let stream = null;
+        let diagnosticsComplete = false;
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logOutput.innerHTML += `[${timestamp}] ${message}<br>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus(message, type = 'info') {
+            systemStatus.textContent = message;
+            systemStatus.className = `status ${type}`;
+        }
+        
+        function updateChecklistItem(element, status) {
+            element.className = status; // 'success', 'warning', or default (error)
+        }
+        
+        async function runFullDiagnostics() {
+            log('🎯 Starting comprehensive diagnostics...');
+            updateStatus('Running diagnostics...', 'info');
+
+            // Check MediaDevices API
+            if (!navigator.mediaDevices) {
+                log('❌ MediaDevices API not supported');
+                updateChecklistItem(checkMediaDevices, 'error');
+            } else {
+                log('✅ MediaDevices API supported');
+                updateChecklistItem(checkMediaDevices, 'success');
+            }
+
+            // Check getUserMedia
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                log('❌ getUserMedia not supported');
+                updateChecklistItem(checkGetUserMedia, 'error');
+            } else {
+                log('✅ getUserMedia supported');
+                updateChecklistItem(checkGetUserMedia, 'success');
+            }
+
+            // Check protocol
+            const isSecure = location.protocol === 'https:' ||
+                           location.hostname === 'localhost' ||
+                           location.hostname === '127.0.0.1';
+
+            if (isSecure) {
+                log('✅ Secure context detected');
+                updateChecklistItem(checkProtocol, 'success');
+            } else {
+                log('⚠️ Insecure context - camera may not work');
+                updateChecklistItem(checkProtocol, 'warning');
+            }
+
+            // Test backend
+            await testBackendConnection();
+
+            // List cameras
+            await listAvailableCameras();
+
+            diagnosticsComplete = true;
+            testCameraBtn.disabled = false;
+            updateStatus('Diagnostics complete', 'success');
+            log('🎯 Diagnostics complete - ready for camera test');
+        }
+
+        async function testBackendConnection() {
+            log('🔗 Testing backend connection...');
+
+            try {
+                const response = await fetch('http://localhost:5000/camera-test');
+                const data = await response.json();
+
+                if (data.success) {
+                    log('✅ Backend connection successful');
+                    log(`📊 Server: ${data.server_info}`);
+                    updateChecklistItem(checkBackend, 'success');
+                } else {
+                    log('❌ Backend responded with error');
+                    updateChecklistItem(checkBackend, 'error');
+                }
+            } catch (error) {
+                log(`❌ Backend connection failed: ${error.message}`);
+                updateChecklistItem(checkBackend, 'error');
+            }
+        }
+
+        async function listAvailableCameras() {
+            log('📹 Listing available cameras...');
+
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+                if (videoDevices.length === 0) {
+                    log('❌ No cameras found');
+                    updateChecklistItem(checkCameras, 'error');
+                } else {
+                    log(`✅ Found ${videoDevices.length} camera(s)`);
+                    videoDevices.forEach((device, index) => {
+                        log(`  📷 Camera ${index + 1}: ${device.label || 'Unknown'}`);
+                    });
+                    updateChecklistItem(checkCameras, 'success');
+                }
+            } catch (error) {
+                log(`❌ Error listing cameras: ${error.message}`);
+                updateChecklistItem(checkCameras, 'error');
+            }
+        }
+
+        async function testCamera() {
+            log('🎥 Testing camera access...');
+            updateStatus('Testing camera...', 'info');
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    },
+                    audio: false
+                });
+
+                log('✅ Camera access granted');
+                videoElement.srcObject = stream;
+
+                videoElement.addEventListener('loadedmetadata', () => {
+                    log(`📹 Video stream: ${videoElement.videoWidth}x${videoElement.videoHeight}`);
+                });
+
+                testCameraBtn.disabled = true;
+                stopCameraBtn.disabled = false;
+                updateStatus('Camera test successful!', 'success');
+
+            } catch (error) {
+                log(`❌ Camera test failed: ${error.name} - ${error.message}`);
+
+                let errorMsg = 'Camera test failed: ';
+                switch (error.name) {
+                    case 'NotAllowedError':
+                        errorMsg += 'Permission denied - check browser permissions';
+                        break;
+                    case 'NotFoundError':
+                        errorMsg += 'No camera found - check hardware connection';
+                        break;
+                    case 'NotReadableError':
+                        errorMsg += 'Camera in use - close other applications';
+                        break;
+                    default:
+                        errorMsg += error.message;
+                }
+
+                updateStatus(errorMsg, 'error');
+            }
+        }
+
+        function stopCamera() {
+            log('🛑 Stopping camera...');
+
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    log(`🔌 Stopped ${track.kind} track`);
+                });
+                stream = null;
+            }
+
+            videoElement.srcObject = null;
+            testCameraBtn.disabled = false;
+            stopCameraBtn.disabled = true;
+            updateStatus('Camera stopped', 'info');
+        }
+
+        // Event listeners
+        runDiagnosticsBtn.addEventListener('click', runFullDiagnostics);
+        testBackendBtn.addEventListener('click', testBackendConnection);
+        listCamerasBtn.addEventListener('click', listAvailableCameras);
+        testCameraBtn.addEventListener('click', testCamera);
+        stopCameraBtn.addEventListener('click', stopCamera);
+
+        // Initialize
+        window.addEventListener('load', () => {
+            log('🔧 Camera Troubleshooting Tool Loaded');
+            updateStatus('Ready to run diagnostics', 'info');
+        });
+    </script>
+</body>
+</html>
