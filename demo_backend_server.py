@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-🎯 DEMO BACKEND SERVER - 75.9% Checkpoint Integration
-Flask server that uses the restored 75.9% validation accuracy model
+🎯 DEMO BACKEND SERVER - Checkpoint 165 Integration
+Flask server that uses the restored checkpoint 165 (81.65% validation accuracy) model
 for real-time lip-reading predictions via iOS Expo Go app.
 """
 
@@ -144,7 +144,7 @@ TEMPERATURE = 1.0  # Restored to checkpoint 165 temperature
 ALLOWED_EXTENSIONS = {'mp4', 'mov', 'avi', 'webm'}  # Added WebM support for web browsers
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB max file size
 CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', '0.30'))
-MODEL_PATH = os.getenv('MODEL_PATH', './checkpoint_75_9_percent.pth')
+MODEL_PATH = os.getenv('MODEL_PATH', './checkpoint_enhanced_81_65_percent_success_20250924/best_lightweight_model.pth')
 
 # Checkpoint 165: No calibration system
 calibration_disabled = True
@@ -489,7 +489,7 @@ def predict_video_calibrated(video_tensor, temperature=1.5):
         response = {
             "success": True,
             "top2": results,
-            "model_info": "75.9% Validation Accuracy Checkpoint (Per-User Calibration)",
+            "model_info": "Checkpoint 165: 81.65% Validation Accuracy Model",
             "temperature": temperature,
             "calibrated": len(calibration_data) == 4,
             "raw_logits": raw_logits.tolist(),
@@ -673,7 +673,7 @@ def predict():
         response = {
             "success": True,
             "timestamp": datetime.now().isoformat(),
-            "model_info": "75.9% Validation Accuracy Checkpoint (Per-User Calibration)",
+            "model_info": "Checkpoint 165: 81.65% Validation Accuracy Model",
             **prediction_result
         }
 
@@ -842,7 +842,7 @@ def camera_test_endpoint():
     })
 
 if __name__ == '__main__':
-    print("🎯 DEMO BACKEND SERVER - 75.9% Checkpoint")
+    print("🎯 DEMO BACKEND SERVER - Checkpoint 165 (81.65% Validation Accuracy)")
     print("=" * 50)
     
     # Load the model
