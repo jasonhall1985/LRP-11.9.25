@@ -1,0 +1,48 @@
+SPEAKER SETS ORGANIZATION SUMMARY
+==================================================
+
+Total speakers found: 17
+Top 6 speakers selected for training
+
+Speaker 1: 65plus_female_caucasian
+  Total videos: 531
+  doctor: 56 videos
+  i_need_to_move: 219 videos
+  my_mouth_is_dry: 165 videos
+  pillow: 91 videos
+
+Speaker 2: 18to39_male_unknown
+  Total videos: 218
+  doctor: 55 videos
+  i_need_to_move: 112 videos
+  my_mouth_is_dry: 24 videos
+  pillow: 27 videos
+
+Speaker 3: 40to64_female_caucasian
+  Total videos: 211
+  doctor: 26 videos
+  i_need_to_move: 92 videos
+  my_mouth_is_dry: 53 videos
+  pillow: 40 videos
+
+Speaker 4: 18to39_female_caucasian
+  Total videos: 149
+  doctor: 14 videos
+  i_need_to_move: 59 videos
+  my_mouth_is_dry: 47 videos
+  pillow: 29 videos
+
+Speaker 5: 18to39_male_caucasian
+  Total videos: 139
+  doctor: 5 videos
+  i_need_to_move: 62 videos
+  my_mouth_is_dry: 33 videos
+  pillow: 39 videos
+
+Speaker 6: 18to39_female_asian
+  Total videos: 54
+  doctor: 6 videos
+  i_need_to_move: 19 videos
+  my_mouth_is_dry: 15 videos
+  pillow: 14 videos
+

@@ -18,6 +18,7 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader, WeightedRandomSampler
 import numpy as np
@@ -171,7 +172,25 @@ def create_model(num_classes, dropout=0.6, head_type="small_fc", grid_checkpoint
     
     return model
 
-def train_epoch(model, dataloader, criterion, optimizer, device, curriculum_epoch=None, use_arcface=False):
+def mixup_data(x, y, alpha=1.0, device='cpu'):
+    """Apply MixUp augmentation to input data and labels."""
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    batch_size = x.size(0)
+    index = torch.randperm(batch_size).to(device)
+
+    mixed_x = lam * x + (1 - lam) * x[index, :]
+    y_a, y_b = y, y[index]
+    return mixed_x, y_a, y_b, lam
+
+def mixup_criterion(criterion, pred, y_a, y_b, lam):
+    """Compute MixUp loss."""
+    return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+
+def train_epoch(model, dataloader, criterion, optimizer, device, curriculum_epoch=None, use_arcface=False, mixup_alpha=0.0):
     """Train for one epoch with optional curriculum learning."""
     model.train()
     total_loss = 0
@@ -202,8 +221,15 @@ def train_epoch(model, dataloader, criterion, optimizer, device, curriculum_epoc
                 labels = labels[good_indices]
         
         optimizer.zero_grad()
-        outputs = model(videos, labels, use_arcface)
-        loss = criterion(outputs, labels)
+
+        # Apply MixUp if enabled
+        if mixup_alpha > 0.0:
+            videos, labels_a, labels_b, lam = mixup_data(videos, labels, mixup_alpha, device)
+            outputs = model(videos, labels_a, use_arcface)  # Use labels_a for ArcFace
+            loss = mixup_criterion(criterion, outputs, labels_a, labels_b, lam)
+        else:
+            outputs = model(videos, labels, use_arcface)
+            loss = criterion(outputs, labels)
         loss.backward()
         
         # Gradient clipping
@@ -261,6 +287,8 @@ def main():
     parser.add_argument("--init-from", help="GRID encoder checkpoint path")
     parser.add_argument("--head", choices=["small_fc", "cosine_fc", "standard"], default="small_fc", help="Head type")
     parser.add_argument("--loss", choices=["cross_entropy", "arcface"], default="cross_entropy", help="Loss function type")
+    parser.add_argument("--mixup-alpha", type=float, default=0.0, help="MixUp alpha parameter (0=disabled)")
+    parser.add_argument("--temporal-jitter-frames", type=int, default=0, help="Temporal jitter frames (0=disabled)")
     parser.add_argument("--freeze-encoder", type=int, default=5, help="Epochs to freeze encoder")
     parser.add_argument("--unfreeze-last-block", action="store_true", help="Unfreeze last block only")
     parser.add_argument("--curriculum", action="store_true", help="Use curriculum learning")
@@ -339,7 +367,7 @@ def main():
         
         # Training setup
         if args.loss == "arcface":
-            criterion = ArcFaceLoss(margin=0.5, label_smoothing=args.label_smoothing)
+            criterion = ArcFaceLoss(margin=0.2, scale=16.0, label_smoothing=args.label_smoothing)
         else:
             criterion = LabelSmoothingCrossEntropy(smoothing=args.label_smoothing)
         optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
@@ -362,7 +390,7 @@ def main():
             curriculum_epoch = epoch if args.curriculum else None
             train_loss, train_acc = train_epoch(
                 model, train_loader, criterion, optimizer, device, curriculum_epoch,
-                use_arcface=(args.loss == "arcface")
+                use_arcface=(args.loss == "arcface"), mixup_alpha=args.mixup_alpha
             )
             
             # Validation

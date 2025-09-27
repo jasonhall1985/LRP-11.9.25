@@ -30,7 +30,7 @@ class CosineFCHead(nn.Module):
     which is more robust to speaker variations than standard linear layers.
     """
     
-    def __init__(self, input_dim=256, num_classes=4, temperature=10.0, margin=0.5):
+    def __init__(self, input_dim=256, num_classes=4, temperature=16.0, margin=0.2):
         super().__init__()
         
         self.input_dim = input_dim
@@ -123,7 +123,7 @@ class ArcFaceLoss(nn.Module):
     inter-class separability and intra-class compactness.
     """
     
-    def __init__(self, margin=0.5, scale=64.0, label_smoothing=0.0):
+    def __init__(self, margin=0.2, scale=16.0, label_smoothing=0.0):
         super().__init__()
         self.margin = margin
         self.scale = scale
@@ -150,7 +150,7 @@ class ArcFaceLoss(nn.Module):
         return self.criterion(cosine_logits, labels)
 
 
-def create_cosine_head(input_dim=256, num_classes=4, temperature=10.0, margin=0.5):
+def create_cosine_head(input_dim=256, num_classes=4, temperature=16.0, margin=0.2):
     """
     Factory function to create cosine classification head.
     

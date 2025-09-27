@@ -1,0 +1,239 @@
+THREE-STAGE TRAINING PIPELINE REPORT
+============================================================
+Execution Date: 2025-09-27 10:28:43
+Total Duration: 0:00:07.047440
+
+CONFIGURATION:
+  grid_dir: data/grid
+  grid_epochs: 30
+  icu_epochs: 20
+  personalization_epochs: 5
+  batch_size: 8
+  words_per_class: 20
+  k_shot: 10
+  output_dir: runs/baseline_loso
+  grid_lr: 0.001
+  icu_lr: 0.0005
+  personalization_lr: 0.0001
+  skip_grid: True
+  skip_icu: False
+  skip_personalization: False
+
+EXECUTION LOG:
+[10:28:45] Stage 1 - GRID Pretraining: SKIPPED
+    User requested skip
+[10:28:45] Stage 2 - ICU Fine-tuning (LOSO): RUNNING
+    Command: python3 train_icu_finetune.py --data-dir data/speaker sets --output-dir runs/baseline_loso/checkpoints/icu_finetuning --max-epochs 20 --batch-size 8 --learning-rate 0.0005 --no-pretrained
+[10:28:50] Stage 2 - ICU Fine-tuning (LOSO): ERROR
+    Exit code 1: INFO:loso_cross_validation_framework:Discovered 9 speakers: ['speaker 1', 'speaker 1 ', 'speaker 2', 'speaker 2 ', 'speaker 3', 'speaker 3 ', 'speaker 4', 'speaker 5', 'speaker 6']
+INFO:loso_cross_validation_framework:
+=== Generating LOSO split for speaker 1 ===
+INFO:loso_cross_validation_framework:LOSO Split - Held out: speaker 1
+INFO:loso_cross_validation_framework:  Training videos: 1436 from 8 speakers
+INFO:loso_cross_validation_framework:  Validation videos: 531 from 1 speaker
+INFO:loso_cross_validation_framework:  Training class distribution:
+INFO:loso_cross_validation_framework:    doctor: 280 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 502 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 321 videos
+INFO:loso_cross_validation_framework:    pillow: 333 videos
+INFO:loso_cross_validation_framework:  Validation class distribution:
+INFO:loso_cross_validation_framework:    doctor: 56 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 219 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 165 videos
+INFO:loso_cross_validation_framework:    pillow: 91 videos
+INFO:loso_cross_validation_framework:Saved LOSO manifests:
+INFO:loso_cross_validation_framework:  Training: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_train_holdout_speaker 1.csv
+INFO:loso_cross_validation_framework:  Validation: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_val_holdout_speaker 1.csv
+INFO:loso_cross_validation_framework:
+=== Generating LOSO split for speaker 1  ===
+INFO:loso_cross_validation_framework:LOSO Split - Held out: speaker 1 
+INFO:loso_cross_validation_framework:  Training videos: 1887 from 8 speakers
+INFO:loso_cross_validation_framework:  Validation videos: 80 from 1 speaker
+INFO:loso_cross_validation_framework:  Training class distribution:
+INFO:loso_cross_validation_framework:    doctor: 316 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 701 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 466 videos
+INFO:loso_cross_validation_framework:    pillow: 404 videos
+INFO:loso_cross_validation_framework:  Validation class distribution:
+INFO:loso_cross_validation_framework:    doctor: 20 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 20 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 20 videos
+INFO:loso_cross_validation_framework:    pillow: 20 videos
+INFO:loso_cross_validation_framework:Saved LOSO manifests:
+INFO:loso_cross_validation_framework:  Training: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_train_holdout_speaker 1 .csv
+INFO:loso_cross_validation_framework:  Validation: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_val_holdout_speaker 1 .csv
+INFO:loso_cross_validation_framework:
+=== Generating LOSO split for speaker 2 ===
+INFO:loso_cross_validation_framework:LOSO Split - Held out: speaker 2
+INFO:loso_cross_validation_framework:  Training videos: 1749 from 8 speakers
+INFO:loso_cross_validation_framework:  Validation videos: 218 from 1 speaker
+INFO:loso_cross_validation_framework:  Training class distribution:
+INFO:loso_cross_validation_framework:    doctor: 281 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 609 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 462 videos
+INFO:loso_cross_validation_framework:    pillow: 397 videos
+INFO:loso_cross_validation_framework:  Validation class distribution:
+INFO:loso_cross_validation_framework:    doctor: 55 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 112 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 24 videos
+INFO:loso_cross_validation_framework:    pillow: 27 videos
+INFO:loso_cross_validation_framework:Saved LOSO manifests:
+INFO:loso_cross_validation_framework:  Training: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_train_holdout_speaker 2.csv
+INFO:loso_cross_validation_framework:  Validation: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_val_holdout_speaker 2.csv
+INFO:loso_cross_validation_framework:
+=== Generating LOSO split for speaker 2  ===
+INFO:loso_cross_validation_framework:LOSO Split - Held out: speaker 2 
+INFO:loso_cross_validation_framework:  Training videos: 1887 from 8 speakers
+INFO:loso_cross_validation_framework:  Validation videos: 80 from 1 speaker
+INFO:loso_cross_validation_framework:  Training class distribution:
+INFO:loso_cross_validation_framework:    doctor: 315 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 702 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 467 videos
+INFO:loso_cross_validation_framework:    pillow: 403 videos
+INFO:loso_cross_validation_framework:  Validation class distribution:
+INFO:loso_cross_validation_framework:    doctor: 21 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 19 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 19 videos
+INFO:loso_cross_validation_framework:    pillow: 21 videos
+INFO:loso_cross_validation_framework:Saved LOSO manifests:
+INFO:loso_cross_validation_framework:  Training: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_train_holdout_speaker 2 .csv
+INFO:loso_cross_validation_framework:  Validation: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_val_holdout_speaker 2 .csv
+INFO:loso_cross_validation_framework:
+=== Generating LOSO split for speaker 3 ===
+INFO:loso_cross_validation_framework:LOSO Split - Held out: speaker 3
+INFO:loso_cross_validation_framework:  Training videos: 1756 from 8 speakers
+INFO:loso_cross_validation_framework:  Validation videos: 211 from 1 speaker
+INFO:loso_cross_validation_framework:  Training class distribution:
+INFO:loso_cross_validation_framework:    doctor: 310 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 629 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 433 videos
+INFO:loso_cross_validation_framework:    pillow: 384 videos
+INFO:loso_cross_validation_framework:  Validation class distribution:
+INFO:loso_cross_validation_framework:    doctor: 26 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 92 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 53 videos
+INFO:loso_cross_validation_framework:    pillow: 40 videos
+INFO:loso_cross_validation_framework:Saved LOSO manifests:
+INFO:loso_cross_validation_framework:  Training: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_train_holdout_speaker 3.csv
+INFO:loso_cross_validation_framework:  Validation: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_val_holdout_speaker 3.csv
+INFO:loso_cross_validation_framework:
+=== Generating LOSO split for speaker 3  ===
+INFO:loso_cross_validation_framework:LOSO Split - Held out: speaker 3 
+INFO:loso_cross_validation_framework:  Training videos: 1833 from 8 speakers
+INFO:loso_cross_validation_framework:  Validation videos: 134 from 1 speaker
+INFO:loso_cross_validation_framework:  Training class distribution:
+INFO:loso_cross_validation_framework:    doctor: 281 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 695 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 460 videos
+INFO:loso_cross_validation_framework:    pillow: 397 videos
+INFO:loso_cross_validation_framework:  Validation class distribution:
+INFO:loso_cross_validation_framework:    doctor: 55 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 26 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 26 videos
+INFO:loso_cross_validation_framework:    pillow: 27 videos
+INFO:loso_cross_validation_framework:Saved LOSO manifests:
+INFO:loso_cross_validation_framework:  Training: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_train_holdout_speaker 3 .csv
+INFO:loso_cross_validation_framework:  Validation: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_val_holdout_speaker 3 .csv
+INFO:loso_cross_validation_framework:
+=== Generating LOSO split for speaker 4 ===
+INFO:loso_cross_validation_framework:LOSO Split - Held out: speaker 4
+INFO:loso_cross_validation_framework:  Training videos: 1654 from 8 speakers
+INFO:loso_cross_validation_framework:  Validation videos: 313 from 1 speaker
+INFO:loso_cross_validation_framework:  Training class distribution:
+INFO:loso_cross_validation_framework:    doctor: 286 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 626 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 394 videos
+INFO:loso_cross_validation_framework:    pillow: 348 videos
+INFO:loso_cross_validation_framework:  Validation class distribution:
+INFO:loso_cross_validation_framework:    doctor: 50 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 95 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 92 videos
+INFO:loso_cross_validation_framework:    pillow: 76 videos
+INFO:loso_cross_validation_framework:Saved LOSO manifests:
+INFO:loso_cross_validation_framework:  Training: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_train_holdout_speaker 4.csv
+INFO:loso_cross_validation_framework:  Validation: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_val_holdout_speaker 4.csv
+INFO:loso_cross_validation_framework:
+=== Generating LOSO split for speaker 5 ===
+INFO:loso_cross_validation_framework:LOSO Split - Held out: speaker 5
+INFO:loso_cross_validation_framework:  Training videos: 1669 from 8 speakers
+INFO:loso_cross_validation_framework:  Validation videos: 298 from 1 speaker
+INFO:loso_cross_validation_framework:  Training class distribution:
+INFO:loso_cross_validation_framework:    doctor: 301 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 614 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 423 videos
+INFO:loso_cross_validation_framework:    pillow: 331 videos
+INFO:loso_cross_validation_framework:  Validation class distribution:
+INFO:loso_cross_validation_framework:    doctor: 35 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 107 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 63 videos
+INFO:loso_cross_validation_framework:    pillow: 93 videos
+INFO:loso_cross_validation_framework:Saved LOSO manifests:
+INFO:loso_cross_validation_framework:  Training: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_train_holdout_speaker 5.csv
+INFO:loso_cross_validation_framework:  Validation: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_val_holdout_speaker 5.csv
+INFO:loso_cross_validation_framework:
+=== Generating LOSO split for speaker 6 ===
+INFO:loso_cross_validation_framework:LOSO Split - Held out: speaker 6
+INFO:loso_cross_validation_framework:  Training videos: 1865 from 8 speakers
+INFO:loso_cross_validation_framework:  Validation videos: 102 from 1 speaker
+INFO:loso_cross_validation_framework:  Training class distribution:
+INFO:loso_cross_validation_framework:    doctor: 318 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 690 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 462 videos
+INFO:loso_cross_validation_framework:    pillow: 395 videos
+INFO:loso_cross_validation_framework:  Validation class distribution:
+INFO:loso_cross_validation_framework:    doctor: 18 videos
+INFO:loso_cross_validation_framework:    i_need_to_move: 31 videos
+INFO:loso_cross_validation_framework:    my_mouth_is_dry: 24 videos
+INFO:loso_cross_validation_framework:    pillow: 29 videos
+INFO:loso_cross_validation_framework:Saved LOSO manifests:
+INFO:loso_cross_validation_framework:  Training: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_train_holdout_speaker 6.csv
+INFO:loso_cross_validation_framework:  Validation: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_val_holdout_speaker 6.csv
+INFO:loso_cross_validation_framework:
+Generated LOSO splits for all 9 speakers
+INFO:loso_cross_validation_framework:Summary saved to: runs/baseline_loso/checkpoints/icu_finetuning/loso_splits/loso_splits_summary.json
+Traceback (most recent call last):
+  File "/Users/client/Desktop/LRP classifier 11.9.25/train_icu_finetune.py", line 516, in <module>
+    exit_code = main()
+  File "/Users/client/Desktop/LRP classifier 11.9.25/train_icu_finetune.py", line 477, in main
+    fold_result = fine_tuner.train_fold(train_loader, val_loader, fold_num + 1, output_dir)
+  File "/Users/client/Desktop/LRP classifier 11.9.25/train_icu_finetune.py", line 195, in train_fold
+    self.setup_training_components(freeze_encoder=True)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/client/Desktop/LRP classifier 11.9.25/train_icu_finetune.py", line 147, in setup_training_components
+    self.optimizer = optim.AdamW(
+                     ~~~~~~~~~~~^
+        trainable_params_list,
+        ^^^^^^^^^^^^^^^^^^^^^^
+        lr=self.config['learning_rate'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        weight_decay=self.config['weight_decay']
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/client/Desktop/LRP classifier 11.9.25/venv/lib/python3.13/site-packages/torch/optim/adamw.py", line 37, in __init__
+    super().__init__(
+    ~~~~~~~~~~~~~~~~^
+        params,
+        ^^^^^^^
+    ...<10 lines>...
+        decoupled_weight_decay=True,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/client/Desktop/LRP classifier 11.9.25/venv/lib/python3.13/site-packages/torch/optim/adam.py", line 101, in __init__
+    super().__init__(params, defaults)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/client/Desktop/LRP classifier 11.9.25/venv/lib/python3.13/site-packages/torch/optim/optimizer.py", line 395, in __init__
+    raise ValueError("optimizer got an empty parameter list")
+ValueError: optimizer got an empty parameter list
+
+STAGE SUMMARY:
+  Stage 1 (GRID Pretraining): ⏭️ SKIPPED
+  Stage 2 (ICU Fine-tuning (LOSO)): ❌ FAILED
+  Stage 3 (Few-shot Personalization): ⏭️ SKIPPED
+
+NEXT STEPS:
+1. Review individual stage logs in respective output directories
+2. Evaluate model performance using validation metrics
+3. Deploy personalized models for bedside use
+4. Monitor real-world performance and collect feedback
