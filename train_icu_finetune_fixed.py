@@ -26,6 +26,7 @@ from sklearn.metrics import accuracy_score, f1_score, classification_report, con
 # Add project paths
 sys.path.append('.')
 from models.heads.small_fc import SmallFCHead
+from models.heads.cosine_fc import CosineFCHead, ArcFaceLoss
 from utils.id_norm import validate_label_consistency
 from advanced_training_components import (
     ComprehensiveVideoDataset,
@@ -41,7 +42,7 @@ logger = logging.getLogger(__name__)
 class EnhancedLightweightCNNLSTM(nn.Module):
     """Enhanced model with small FC head and GRID pretraining support."""
     
-    def __init__(self, num_classes=4, dropout=0.6, use_small_head=True):
+    def __init__(self, num_classes=4, dropout=0.6, head_type="small_fc"):
         super().__init__()
         
         # 3D CNN Encoder (same as before)
@@ -75,32 +76,37 @@ class EnhancedLightweightCNNLSTM(nn.Module):
         self.lstm = nn.LSTM(256 * 2 * 2, 256, batch_first=True, dropout=dropout)
         
         # Classification head
-        if use_small_head:
+        if head_type == "small_fc":
             self.classifier = SmallFCHead(256, num_classes, dropout)
-        else:
+        elif head_type == "cosine_fc":
+            self.classifier = CosineFCHead(256, num_classes)
+        else:  # standard
             self.classifier = nn.Sequential(
                 nn.Dropout(dropout),
                 nn.Linear(256, num_classes)
             )
     
-    def forward(self, x):
+    def forward(self, x, labels=None, use_arcface=False):
         batch_size, channels, frames, height, width = x.shape
-        
+
         # CNN encoding
         x = self.encoder(x)  # [B, 256, T', H', W']
-        
+
         # Reshape for LSTM
         x = x.permute(0, 2, 1, 3, 4)  # [B, T', 256, H', W']
         x = x.contiguous().view(batch_size, x.size(1), -1)  # [B, T', 256*H'*W']
-        
+
         # LSTM
         lstm_out, _ = self.lstm(x)  # [B, T', 256]
-        
+
         # Use last timestep
         features = lstm_out[:, -1, :]  # [B, 256]
-        
-        # Classification
-        return self.classifier(features)
+
+        # Classification (support ArcFace for cosine head)
+        if hasattr(self.classifier, 'forward') and 'labels' in self.classifier.forward.__code__.co_varnames:
+            return self.classifier(features, labels, use_arcface)
+        else:
+            return self.classifier(features)
     
     def freeze_encoder(self):
         """Freeze encoder parameters."""
@@ -150,9 +156,9 @@ def load_grid_encoder(model, checkpoint_path):
     
     return model
 
-def create_model(num_classes, dropout=0.6, use_small_head=True, grid_checkpoint=None):
+def create_model(num_classes, dropout=0.6, head_type="small_fc", grid_checkpoint=None):
     """Create model with optional GRID pretraining."""
-    model = EnhancedLightweightCNNLSTM(num_classes, dropout, use_small_head)
+    model = EnhancedLightweightCNNLSTM(num_classes, dropout, head_type)
     
     if grid_checkpoint:
         model = load_grid_encoder(model, grid_checkpoint)
@@ -165,7 +171,7 @@ def create_model(num_classes, dropout=0.6, use_small_head=True, grid_checkpoint=
     
     return model
 
-def train_epoch(model, dataloader, criterion, optimizer, device, curriculum_epoch=None):
+def train_epoch(model, dataloader, criterion, optimizer, device, curriculum_epoch=None, use_arcface=False):
     """Train for one epoch with optional curriculum learning."""
     model.train()
     total_loss = 0
@@ -196,7 +202,7 @@ def train_epoch(model, dataloader, criterion, optimizer, device, curriculum_epoc
                 labels = labels[good_indices]
         
         optimizer.zero_grad()
-        outputs = model(videos)
+        outputs = model(videos, labels, use_arcface)
         loss = criterion(outputs, labels)
         loss.backward()
         
@@ -253,7 +259,8 @@ def main():
     parser.add_argument("--splits-dir", required=True, help="Directory containing LOSO splits")
     parser.add_argument("--data-root", default="data/stabilized_subclips", help="Data root directory")
     parser.add_argument("--init-from", help="GRID encoder checkpoint path")
-    parser.add_argument("--head", choices=["small_fc", "standard"], default="small_fc", help="Head type")
+    parser.add_argument("--head", choices=["small_fc", "cosine_fc", "standard"], default="small_fc", help="Head type")
+    parser.add_argument("--loss", choices=["cross_entropy", "arcface"], default="cross_entropy", help="Loss function type")
     parser.add_argument("--freeze-encoder", type=int, default=5, help="Epochs to freeze encoder")
     parser.add_argument("--unfreeze-last-block", action="store_true", help="Unfreeze last block only")
     parser.add_argument("--curriculum", action="store_true", help="Use curriculum learning")
@@ -263,6 +270,8 @@ def main():
     parser.add_argument("--dropout", type=float, default=0.6, help="Dropout rate")
     parser.add_argument("--label-smoothing", type=float, default=0.05, help="Label smoothing")
     parser.add_argument("--epochs", type=int, default=25, help="Training epochs")
+    parser.add_argument("--early-stopping-patience", type=int, default=10, help="Early stopping patience")
+    parser.add_argument("--restore-best-weights", action="store_true", help="Restore best weights after training")
     parser.add_argument("--output-dir", default="checkpoints/icu_finetune_fixed", help="Output directory")
     
     args = parser.parse_args()
@@ -296,7 +305,7 @@ def main():
         model = create_model(
             num_classes=num_classes,
             dropout=args.dropout,
-            use_small_head=(args.head == "small_fc"),
+            head_type=args.head,
             grid_checkpoint=args.init_from
         ).to(device)
         
@@ -329,14 +338,19 @@ def main():
         )
         
         # Training setup
-        criterion = LabelSmoothingCrossEntropy(smoothing=args.label_smoothing)
+        if args.loss == "arcface":
+            criterion = ArcFaceLoss(margin=0.5, label_smoothing=args.label_smoothing)
+        else:
+            criterion = LabelSmoothingCrossEntropy(smoothing=args.label_smoothing)
         optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, factor=0.5)
         
-        # Training loop
+        # Training loop with early stopping
         best_val_acc = 0
+        best_epoch = 0
+        patience_counter = 0
         best_model_path = os.path.join(args.output_dir, f"fold_{fold_idx}_best.pth")
-        
+
         for epoch in range(args.epochs):
             # Progressive unfreezing
             if epoch == args.freeze_encoder and args.unfreeze_last_block:
@@ -347,7 +361,8 @@ def main():
             # Training
             curriculum_epoch = epoch if args.curriculum else None
             train_loss, train_acc = train_epoch(
-                model, train_loader, criterion, optimizer, device, curriculum_epoch
+                model, train_loader, criterion, optimizer, device, curriculum_epoch,
+                use_arcface=(args.loss == "arcface")
             )
             
             # Validation
@@ -356,18 +371,33 @@ def main():
             # Scheduler step
             scheduler.step(val_loss)
             
-            # Save best model
+            # Save best model and early stopping logic
             if val_acc > best_val_acc:
                 best_val_acc = val_acc
+                best_epoch = epoch
+                patience_counter = 0
                 torch.save(model.state_dict(), best_model_path)
+            else:
+                patience_counter += 1
             
             logger.info(
                 f"Fold {fold_idx} Epoch {epoch+1:2d}/{args.epochs} | "
                 f"Train: {train_loss:.4f}/{train_acc:.1%} | "
                 f"Val: {val_loss:.4f}/{val_acc:.1%}/{val_f1:.4f} | "
-                f"Best: {best_val_acc:.1%}"
+                f"Best: {best_val_acc:.1%} (epoch {best_epoch+1}) | "
+                f"Patience: {patience_counter}/{args.early_stopping_patience}"
             )
-        
+
+            # Early stopping check
+            if patience_counter >= args.early_stopping_patience:
+                logger.info(f"Early stopping triggered at epoch {epoch+1}")
+                break
+
+        # Restore best weights if requested
+        if args.restore_best_weights and os.path.exists(best_model_path):
+            model.load_state_dict(torch.load(best_model_path, map_location=device))
+            logger.info(f"Restored best weights from epoch {best_epoch+1}")
+
         # Store results
         fold_result = {
             'fold': fold_idx,
